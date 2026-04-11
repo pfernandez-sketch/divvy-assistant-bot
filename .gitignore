@@ -1,0 +1,6 @@
+*.csv
+*.xlsx
+*.jpeg
+.streamlit/secrets.toml
+__pycache__/
+desktop.ini
