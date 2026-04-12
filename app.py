@@ -553,7 +553,7 @@ def parse_response(raw: str) -> dict:
 def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame):
     """
     Ejecuta el código generado por el LLM en un contexto controlado.
-    Devuelve (fig, resultado) — cualquiera puede ser None.
+    Devuelve (fig, resultado) - cualquiera puede ser None.
     """
     # Limpiar imports del código generado para evitar conflictos
     code = re.sub(r'^\s*import\s+\w+\s*$', '', code, flags=re.MULTILINE)
