@@ -697,6 +697,9 @@ with st.spinner("Sincronizando estaciones..."):
 current_dt = unique_times[-1]
 df_merged = df_all[df_all["time_bucket"] == current_dt].copy()
 
+if df_merged.empty:
+    current_dt = unique_times[0]
+    df_merged = df_all[df_all["time_bucket"] == current_dt].copy()
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
 system_prompt = build_system_prompt(df_merged)
 
@@ -705,6 +708,7 @@ k1, k2, k3, k4 = st.columns(4)
 with k1:
     st.metric("🏢 Estaciones", f"{len(df_merged):,}")
 with k2:
+    
     st.metric("🚲 Bicis disponibles", f"{int(df_merged['num_bikes_available'].sum()):,}")
 with k3:
     st.metric("⚡ E-Bikes disponibles", f"{int(df_merged['num_ebikes_available'].sum()):,}")
