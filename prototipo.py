@@ -338,22 +338,19 @@ Columnas de estado actual (de statios_status):
 ━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES ━━━━
 Tienes tres DataFrames adicionales:
 
-`df_historico`: patron historico por estacion. Columnas: Estacion, Fecha,
-Dia de la semana, Franja horaria, # de Salidas, # de Llegadas, Balance neto,
-temp_media_c, intensidad_lluvia, Evento.
+`df_historico`: patron historico por estacion. Columnas: Estacion, Fecha, Dia de la semana, Franja horaria, # de Salidas, # de Llegadas, Balance neto, temp_media_c, intensidad_lluvia, Evento.
 Balance neto positivo = se vacia. Balance neto negativo = se llena.
 
 `df_clima`: condiciones meteorologicas historicas por franja horaria.
 
-`df_eventos`: calendario de eventos en estadios con franjas de impacto.
+`df_eventos`: calendario de eventos. Columnas: fecha, nombre_evento, estadio, tipo_evento, Franja_hora_inicio, evento_hora_inicio, evento_hora_fin (est), Franja_demanda_Inicio, Franja_demanda_fin.
 
 CUANDO USAR ESTOS DATOS:
-- Al elegir entre varias estaciones para dejar bicis, consulta df_historico
-  para ver cual tiene balance neto mas negativo en ese dia y franja (mas espacio historicamente).
+- Al elegir entre varias estaciones para dejar bicis, consulta df_historico para ver cual tiene balance neto mas negativo en ese dia y franja (mas espacio historicamente).
 - Si llueve o hace frio, identifica en df_historico que estaciones se vacian mas rapido.
 - Si hay evento en Soldier Field o Wrigley Field, usa df_eventos para anticipar saturacion.
-- Combina SIEMPRE df_distances (cercania) con df_historico (patron historico) para
-  dar la mejor recomendacion posible.
+- Combina SIEMPRE df_distances (cercania) con df_historico (patron historico).
+- TIP DE PANDAS: Para comparar estaciones entre tablas usa siempre `.isin()`, ejemplo: `df_merged[df_merged['name'].isin(df_historico['Estacion'])]`. Nunca compares directamente columnas de diferentes DataFrames.
 
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
