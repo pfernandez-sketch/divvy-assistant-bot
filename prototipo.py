@@ -582,11 +582,19 @@ def get_openai_response(user_msg: str, system_prompt: str, chat_history: list = 
     
     # Añadir historial (máximo últimos 6 mensajes para no inflar el contexto)
     for msg in chat_history[-6:]:
-        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+        if msg.get("role") == "user" and msg.get("content"):
             messages.append({
-                "role": msg["role"],
+                "role": "user",
                 "content": msg["content"]
             })
+        elif msg.get("role") == "assistant" and msg.get("content"):
+            # Limpiar el contenido del asistente para que no confunda el formato JSON
+            content = msg["content"].replace("💡 ", "").strip()
+            if content and len(content) < 300:  # Solo mensajes cortos de interpretacion
+                messages.append({
+                    "role": "assistant",
+                    "content": content
+                })
     
     # Añadir el mensaje actual
     messages.append({"role": "user", "content": user_msg})
