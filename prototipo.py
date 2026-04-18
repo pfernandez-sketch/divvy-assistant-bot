@@ -611,24 +611,61 @@ def get_openai_response(user_msg: str, system_prompt: str, chat_history: list = 
 # 7. UTILIDADES DE PARSING Y EJECUCIÓN
 # =============================================================================
 def parse_response(raw: str) -> dict:
-    """Limpia backticks y parsea el JSON devuelto por el LLM."""
+    """Limpia backticks y parsea el JSON devuelto por el LLM con múltiples estrategias de rescate."""
     cleaned = raw.strip()
-    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+    
+    # 1. Limpiar bloques de código markdown
+    cleaned = re.sub(r"^```(?:json|python)?\s*", "", cleaned)
     cleaned = re.sub(r"\s*```$", "", cleaned)
     cleaned = cleaned.strip()
     
+    # 2. Intento de parseo JSON estándar
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        # Rescate: extraer campos manualmente
-        tipo   = re.search(r'"tipo"\s*:\s*"([^"]+)"', cleaned)
-        interp = re.search(r'"interpretacion"\s*:\s*"([^"]+)"', cleaned)
-        codigo = re.search(r'"codigo"\s*:\s*"(.*?)"\s*,\s*"interpretacion"', cleaned, re.DOTALL)
+        pass
+        
+    # 3. Rescate: Extracción por regex independiente de cada campo
+    # Buscamos "campo": "valor" con comillas dobles o simples
+    def extract(field):
+        # Busca el campo y captura el contenido entre la siguiente pareja de comillas
+        pattern = rf'"{field}"\s*:\s*"(.*?)"(?:\s*[,}}])'
+        match = re.search(pattern, cleaned, re.DOTALL)
+        if not match:
+            # Reintento con comillas simples si fallan las dobles
+            pattern = rf"'{field}'\s*:\s*'(.*?)'(?:\s*[,}}])"
+            match = re.search(pattern, cleaned, re.DOTALL)
+        
+        if match:
+            val = match.group(1)
+            # Limpiar escapes comunes de JSON si es necesario
+            return val.replace('\\"', '"').replace('\\n', '\n').strip()
+        return None
+
+    tipo   = extract("tipo")
+    interp = extract("interpretacion")
+    
+    # Para el código, intentamos capturar todo lo que hay entre "codigo": " y el final o el siguiente campo
+    codigo_match = re.search(r'"codigo"\s*:\s*"(.*?)"\s*,\s*"interpretacion"', cleaned, re.DOTALL)
+    if not codigo_match:
+        codigo_match = re.search(r'"codigo"\s*:\s*"(.*)"', cleaned, re.DOTALL)
+    
+    codigo = codigo_match.group(1).replace('\\"', '"').replace('\\n', '\n') if codigo_match else ""
+
+    if tipo or interp:
         return {
-            "tipo"          : tipo.group(1) if tipo else "fuera_de_alcance",
-            "codigo"        : codigo.group(1).replace('\\"', '"').replace('\\n', '\n') if codigo else "",
-            "interpretacion": interp.group(1) if interp else "No se pudo interpretar la respuesta.",
+            "tipo"          : tipo if tipo else "texto_analitico",
+            "codigo"        : codigo,
+            "interpretacion": interp if interp else "No se pudo extraer la interpretación, pero se detectó el tipo.",
         }
+
+    # 4. Último recurso: devolver como fuera de alcance si no se entiende nada
+    return {
+        "tipo"          : "fuera_de_alcance",
+        "codigo"        : "",
+        "interpretacion": "No se pudo interpretar la respuesta del modelo.",
+        "raw_debug"     : raw # Guardamos el original para debug
+    }
 
 
 # ============================================================
@@ -803,7 +840,11 @@ with tab_chat:
                     fig, resultado = None, None
                     if tipo == "fuera_de_alcance":
                         interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
-                        st.session_state.messages.append({"role": "assistant", "content": interp})
+                        st.session_state.messages.append({
+                            "role"      : "assistant", 
+                            "content"   : interp,
+                            "raw_debug" : parsed.get("raw_debug")
+                        })
                     else:
                         if codigo.strip():
                             fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
@@ -823,6 +864,7 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
                             "fig"       : fig,
                             "resultado" : resultado,
                             "code"      : codigo,
+                            "raw_debug" : parsed.get("raw_debug"),
                         })
                 except Exception as e:
                     st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
@@ -845,6 +887,9 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
             if msg.get("code"):
                 with st.expander("🔍 Ver código generado", expanded=False):
                     st.code(msg["code"], language="python")
+            if msg.get("raw_debug"):
+                with st.expander("🛠️ Debug: Respuesta original del modelo", expanded=False):
+                    st.text(msg["raw_debug"])
 
     # Input del usuario
     if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctricas disponibles?"):
@@ -862,7 +907,11 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
                     fig, resultado = None, None
                     if tipo == "fuera_de_alcance":
                         interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
-                        st.session_state.messages.append({"role": "assistant", "content": interp})
+                        st.session_state.messages.append({
+                            "role"      : "assistant", 
+                            "content"   : interp,
+                            "raw_debug" : parsed.get("raw_debug")
+                        })
                     else:
                         if codigo.strip():
                             fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
@@ -882,6 +931,7 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
                             "fig"       : fig,
                             "resultado" : resultado,
                             "code"      : codigo,
+                            "raw_debug" : parsed.get("raw_debug"),
                         })
                 except Exception as e:
                     st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
