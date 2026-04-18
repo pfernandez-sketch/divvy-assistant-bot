@@ -536,21 +536,38 @@ def get_stations_distance_matrix(df):
 def build_system_prompt(df_merged: pd.DataFrame) -> str:
     """Inyecta métricas reales del dataset en el System Prompt."""
     if df_merged.empty:
-        return "Actualmente no hay datos disponibles para este instante de tiempo."
+        # Retornamos el prompt con valores neutros o mensaje de error si no hay datos
+        return SYSTEM_PROMPT_TEMPLATE.format(
+            name_example      = "Millennium Park",
+            cap_min           = 0,
+            cap_max           = 0,
+            total_stations    = 0,
+            total_capacity    = 0,
+            total_bikes       = 0,
+            total_ebikes      = 0,
+            occ_min           = 0.0,
+            occ_max           = 0.0,
+            high_occ_count    = 0,
+            low_occ_count     = 0,
+        )
         
-    return SYSTEM_PROMPT_TEMPLATE.format(
-        name_example      = df_merged["name"].iloc[0],
-        cap_min           = int(df_merged["capacity"].min()),
-        cap_max           = int(df_merged["capacity"].max()),
-        total_stations    = len(df_merged),
-        total_capacity    = int(df_merged["capacity"].sum()),
-        total_bikes       = int(df_merged["num_bikes_available"].sum()),
-        total_ebikes      = int(df_merged["num_ebikes_available"].sum()),
-        occ_min           = df_merged["occupancy_pct"].min(),
-        occ_max           = df_merged["occupancy_pct"].max(),
-        high_occ_count    = int((df_merged["occupancy_pct"] > 80).sum()),
-        low_occ_count     = int((df_merged["occupancy_pct"] < 20).sum()),
-    )
+    try:
+        return SYSTEM_PROMPT_TEMPLATE.format(
+            name_example      = df_merged["name"].iloc[0] if "name" in df_merged.columns and not df_merged.empty else "N/A",
+            cap_min           = int(df_merged["capacity"].min()) if "capacity" in df_merged.columns else 0,
+            cap_max           = int(df_merged["capacity"].max()) if "capacity" in df_merged.columns else 0,
+            total_stations    = len(df_merged),
+            total_capacity    = int(df_merged["capacity"].sum()) if "capacity" in df_merged.columns else 0,
+            total_bikes       = int(df_merged["num_bikes_available"].sum()) if "num_bikes_available" in df_merged.columns else 0,
+            total_ebikes      = int(df_merged["num_ebikes_available"].sum()) if "num_ebikes_available" in df_merged.columns else 0,
+            occ_min           = df_merged["occupancy_pct"].min() if "occupancy_pct" in df_merged.columns else 0.0,
+            occ_max           = df_merged["occupancy_pct"].max() if "occupancy_pct" in df_merged.columns else 0.0,
+            high_occ_count    = int((df_merged["occupancy_pct"] > 80).sum()) if "occupancy_pct" in df_merged.columns else 0,
+            low_occ_count     = int((df_merged["occupancy_pct"] < 20).sum()) if "occupancy_pct" in df_merged.columns else 0,
+        )
+    except Exception:
+        # Fallback de último recurso
+        return "Eres un asistente experto en Divvy Chicago. Actualmente hay un problema cargando las métricas en tiempo real."
 
 
 # =============================================================================
@@ -694,12 +711,18 @@ with st.spinner("Sincronizando estaciones..."):
     unique_times = sorted(df_all["time_bucket"].unique())
 
 # ── Obtener el estado de las estaciones (último snapshot disponible) ──
-current_dt = unique_times[-1]
 df_merged = pd.DataFrame()
-for current_dt in reversed(unique_times):
-    df_merged = df_all[df_all["time_bucket"] == current_dt].copy()
-    if not df_merged.empty:
-        break
+current_dt = None
+
+if unique_times:
+    current_dt = unique_times[-1]
+    for dt in reversed(unique_times):
+        df_merged = df_all[df_all["time_bucket"] == dt].copy()
+        if not df_merged.empty:
+            current_dt = dt
+            break
+else:
+    st.warning("⚠️ No se han encontrado datos históricos en los archivos proporcionados.")
 
 
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
@@ -911,6 +934,7 @@ with tab_map:
     st.markdown(f"<div style='margin-bottom:12px;'><span class='info-chip'>🗺️ {len(df_map)} estaciones mostradas</span></div>", unsafe_allow_html=True)
 
     # ── Construir mapa ──
+    snapshot_time = pd.to_datetime(current_dt).strftime('%A %d/%m · %H:%M') if current_dt else "No disponible"
     fig_map = px.scatter_mapbox(
         df_map,
         lat="lat",
@@ -949,7 +973,7 @@ with tab_map:
         center={"lat": 41.8827, "lon": -87.6233},
         zoom=11.5,
         template="plotly_dark",
-        title=f"Estaciones Divvy en Chicago — {len(df_map)} estaciones activas · {pd.to_datetime(current_dt).strftime('%A %d/%m · %H:%M')}",
+        title=f"Estaciones Divvy en Chicago — {len(df_map)} estaciones activas · {snapshot_time}",
     )
 
     fig_map.update_layout(
