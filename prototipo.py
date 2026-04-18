@@ -389,10 +389,10 @@ CUANDO USAR ESTOS DATOS:
 ━━━━ REGLAS PARA LA INTERPRETACIÓN ━━━━
 - Máximo 3 frases
 - En español
-- NUNCA uses {} o {variable} en la interpretación. El resultado ya se muestra arriba en azul.
+- NUNCA uses {{}} o {{variable}} en la interpretación. El resultado ya se muestra arriba en azul.
 - La interpretación debe ser un comentario analítico sobre el resultado, NO una frase que intente reproducirlo.
 - Correcto: "Con 6 docks libres la estación tiene margen suficiente, pero está por debajo del 30% de capacidad libre."
-- Incorrecto: "La estación tiene {} amarres libres disponibles."
+- Incorrecto: "La estación tiene {{}} amarres libres disponibles."
 - Señala insights operativos relevantes (ej: estaciones críticas, oportunidades de rebalanceo)
 
 ━━━━ REGLAS PARA RESPUESTAS OPERATIVAS ━━━━
