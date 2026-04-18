@@ -7,7 +7,7 @@ from openai import OpenAI
 import json
 import re
 import os
-from datetime import datetime
+import datetime
 
 # =============================================================================
 # 1. CONFIGURACIÓN INICIAL DE LA PÁGINA
