@@ -338,19 +338,19 @@ Columnas de estado actual (de statios_status):
 ━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES ━━━━
 Tienes tres DataFrames adicionales:
 
-`df_historico`: patron historico por estacion. Columnas: Estacion, Fecha, Dia de la semana, Franja horaria, # de Salidas, # de Llegadas, Balance neto, temp_media_c, intensidad_lluvia, Evento.
+`df_historico`: patron historico por estacion. Columnas: id, fecha, dia_de_la_semana, franja_horaria, estacion, de_salidas, de_llegadas, balance_neto, variabilidad_balance_neto, temp_media_c, estado_temperatura, precip_total_mm, intensidad_lluvia, humedad_media_pct, viento_medio_nudos, evento.
 Balance neto positivo = se vacia. Balance neto negativo = se llena.
 
-`df_clima`: condiciones meteorologicas historicas por franja horaria.
+`df_clima`: condiciones meteorologicas. Columnas: id, fecha, franja_horaria, temp_media_c, estado_temperatura, precip_total_mm, intensidad_lluvia, humedad_media_pct, viento_medio_nudos.
 
-`df_eventos`: calendario de eventos. Columnas: fecha, nombre_evento, estadio, tipo_evento, Franja_hora_inicio, evento_hora_inicio, evento_hora_fin (est), Franja_demanda_Inicio, Franja_demanda_fin.
+`df_eventos`: calendario de eventos. Columnas: fecha, nombre_evento, estadio, tipo_evento, franja_hora_inicio, evento_hora_inicio, evento_hora_fin_est, franja_demanda_inicio, franja_demanda_fin, duracion.
 
 CUANDO USAR ESTOS DATOS:
-- Al elegir entre varias estaciones para dejar bicis, consulta df_historico para ver cual tiene balance neto mas negativo en ese dia y franja (mas espacio historicamente).
+- Al elegir entre varias estaciones para dejar bicis, consulta df_historico para ver cual tiene balance neto mas negativo en ese dia y franja.
 - Si llueve o hace frio, identifica en df_historico que estaciones se vacian mas rapido.
 - Si hay evento en Soldier Field o Wrigley Field, usa df_eventos para anticipar saturacion.
 - Combina SIEMPRE df_distances (cercania) con df_historico (patron historico).
-- TIP DE PANDAS: Para comparar estaciones entre tablas usa siempre `.isin()`, ejemplo: `df_merged[df_merged['name'].isin(df_historico['Estacion'])]`. Nunca compares directamente columnas de diferentes DataFrames.
+- TIP DE PANDAS: Para comparar estaciones entre tablas usa siempre `.isin()`, ejemplo: `df_merged[df_merged['name'].isin(df_historico['estacion'])]`. Nunca compares directamente columnas de diferentes DataFrames.
 
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
@@ -417,6 +417,26 @@ Reglas específicas:
 def load_data():
     """Carga, limpia y resamplea el dataset temporal con el maestro de estaciones."""
 
+def clean_df_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Normaliza nombres de columnas: minúsculas, sin tildes, snake_case ASCII."""
+    def clean_name(name):
+        name = str(name).lower().strip()
+        # Eliminar tildes
+        replacements = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n'}
+        for k, v in replacements.items():
+            name = name.replace(k, v)
+        # Reemplazar no alfanuméricos por _
+        name = re.sub(r'[^a-z0-9]', '_', name)
+        # Colapsar __ y quitar _ extremos
+        name = re.sub(r'_+', '_', name).strip('_')
+        return name
+    
+    df.columns = [clean_name(c) for c in df.columns]
+    return df
+
+
+@st.cache_data
+def load_data():
     # 1. Cargar Maestro de Estaciones (infostations)
     df_info = pd.read_excel(INFO_FILE, header=None)
     
@@ -437,11 +457,13 @@ def load_data():
 
     # 2. Metadata (Capacidad, Lat, Lon)
     df_cap = pd.read_excel(CAPACITY_FILE)
+    df_cap = clean_df_columns(df_cap)
     df_cap["station_id"] = df_cap["station_id"].astype(str).str.strip()
     df_cap = df_cap[df_cap["station_id"].isin(master_ids)]
 
     # 3. History Status (CSV)
     df_status = pd.read_csv(STATUS_FILE)
+    df_status = clean_df_columns(df_status)
     df_status["station_id"] = df_status["station_id"].astype(str).str.strip()
     df_status["fecha_hora"] = pd.to_datetime(df_status["fecha_hora"])
     df_status = df_status[df_status["station_id"].isin(master_ids)]
@@ -450,11 +472,8 @@ def load_data():
     df_full = pd.merge(df_status, df_cap[["station_id", "name", "short_name", "capacity", "lat", "lon"]], on="station_id", how="inner")
 
     # 5. Resampling Temporal para Simulación
-    # Agrupamos los datos por ventanas de 15 min para sincronizar todas las estaciones en un mismo instante.
-    # Creamos un 'time_bucket' redondeando al intervalo más cercano.
     df_full["time_bucket"] = df_full["fecha_hora"].dt.floor("15min")
     
-    # Dentro de cada ventana de 15 min, nos quedamos con la ÚLTIMA lectura de cada estación
     df_resampled = (
         df_full.sort_values("fecha_hora")
         .groupby(["time_bucket", "station_id"])
@@ -462,7 +481,7 @@ def load_data():
         .reset_index()
     )
 
-    # 6. Cálculo de Columnas Derivadas (Ocupación, Bicis Clásicas, Docks)
+    # 6. Cálculo de Columnas Derivadas
     df_resampled["num_classic_bikes"] = (df_resampled["num_bikes_available"] - df_resampled["num_ebikes_available"]).clip(lower=0)
     df_resampled["docks_used"] = (df_resampled["capacity"] - df_resampled["num_docks_available"]).clip(lower=0)
     df_resampled["occupancy_pct"] = (df_resampled["num_bikes_available"] / df_resampled["capacity"] * 100).round(1).clip(0, 100)
@@ -471,7 +490,7 @@ def load_data():
     df_unique_stations = df_resampled.drop_duplicates(subset="station_id")[["station_id", "lat", "lon"]]
     df_distances = get_stations_distance_matrix(df_unique_stations)
 
-    # Re-ordenar por tiempo y devolver la columna bucket como la principal de fecha
+    # Re-ordenar por tiempo
     df_resampled = df_resampled.sort_values("time_bucket")
     
     # 8. Cargar Datos Históricos Definitivos
@@ -480,10 +499,10 @@ def load_data():
     df_clima = pd.read_excel(HISTORICO_FILE, sheet_name='Hoja1')
     df_eventos = pd.read_excel(HISTORICO_FILE, sheet_name='Hoja2', header=1)
     
-    # Limpiar nombres de columnas
-    df_historico.columns = df_historico.columns.str.strip()
-    df_clima.columns = df_clima.columns.str.strip()
-    df_eventos.columns = df_eventos.columns.str.strip()
+    # Normalización total
+    df_historico = clean_df_columns(df_historico)
+    df_clima = clean_df_columns(df_clima)
+    df_eventos = clean_df_columns(df_eventos)
     
     return df_resampled, df_distances, df_historico, df_clima, df_eventos
 
