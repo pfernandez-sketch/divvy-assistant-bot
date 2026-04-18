@@ -534,40 +534,34 @@ def get_stations_distance_matrix(df):
 
 
 def build_system_prompt(df_merged: pd.DataFrame) -> str:
-    """Inyecta métricas reales del dataset en el System Prompt."""
-    if df_merged.empty:
-        # Retornamos el prompt con valores neutros o mensaje de error si no hay datos
-        return SYSTEM_PROMPT_TEMPLATE.format(
-            name_example      = "Millennium Park",
-            cap_min           = 0,
-            cap_max           = 0,
-            total_stations    = 0,
-            total_capacity    = 0,
-            total_bikes       = 0,
-            total_ebikes      = 0,
-            occ_min           = 0.0,
-            occ_max           = 0.0,
-            high_occ_count    = 0,
-            low_occ_count     = 0,
-        )
-        
-    try:
-        return SYSTEM_PROMPT_TEMPLATE.format(
-            name_example      = df_merged["name"].iloc[0] if "name" in df_merged.columns and not df_merged.empty else "N/A",
-            cap_min           = int(df_merged["capacity"].min()) if "capacity" in df_merged.columns else 0,
-            cap_max           = int(df_merged["capacity"].max()) if "capacity" in df_merged.columns else 0,
-            total_stations    = len(df_merged),
-            total_capacity    = int(df_merged["capacity"].sum()) if "capacity" in df_merged.columns else 0,
-            total_bikes       = int(df_merged["num_bikes_available"].sum()) if "num_bikes_available" in df_merged.columns else 0,
-            total_ebikes      = int(df_merged["num_ebikes_available"].sum()) if "num_ebikes_available" in df_merged.columns else 0,
-            occ_min           = df_merged["occupancy_pct"].min() if "occupancy_pct" in df_merged.columns else 0.0,
-            occ_max           = df_merged["occupancy_pct"].max() if "occupancy_pct" in df_merged.columns else 0.0,
-            high_occ_count    = int((df_merged["occupancy_pct"] > 80).sum()) if "occupancy_pct" in df_merged.columns else 0,
-            low_occ_count     = int((df_merged["occupancy_pct"] < 20).sum()) if "occupancy_pct" in df_merged.columns else 0,
-        )
-    except Exception:
-        # Fallback de último recurso
-        return "Eres un asistente experto en Divvy Chicago. Actualmente hay un problema cargando las métricas en tiempo real."
+    """Inyecta métricas reales del dataset en el System Prompt pulsando siempre el template completo."""
+    
+    # Valores por defecto por si el DataFrame está vacío o fallan los cálculos
+    metrics = {
+        "name_example": "Millennium Park",
+        "cap_min": 0, "cap_max": 0, "total_stations": 0, "total_capacity": 0,
+        "total_bikes": 0, "total_ebikes": 0, "occ_min": 0.0, "occ_max": 0.0,
+        "high_occ_count": 0, "low_occ_count": 0
+    }
+
+    if not df_merged.empty:
+        try:
+            metrics["name_example"]   = str(df_merged["name"].iloc[0]) if "name" in df_merged.columns else "Millennium Park"
+            metrics["cap_min"]        = int(df_merged["capacity"].min()) if "capacity" in df_merged.columns else 0
+            metrics["cap_max"]        = int(df_merged["capacity"].max()) if "capacity" in df_merged.columns else 0
+            metrics["total_stations"] = len(df_merged)
+            metrics["total_capacity"] = int(df_merged["capacity"].sum()) if "capacity" in df_merged.columns else 0
+            metrics["total_bikes"]    = int(df_merged["num_bikes_available"].sum()) if "num_bikes_available" in df_merged.columns else 0
+            metrics["total_ebikes"]   = int(df_merged["num_ebikes_available"].sum()) if "num_ebikes_available" in df_merged.columns else 0
+            metrics["occ_min"]        = float(df_merged["occupancy_pct"].min()) if "occupancy_pct" in df_merged.columns else 0.0
+            metrics["occ_max"]        = float(df_merged["occupancy_pct"].max()) if "occupancy_pct" in df_merged.columns else 0.0
+            metrics["high_occ_count"] = int((df_merged["occupancy_pct"] > 80).sum()) if "occupancy_pct" in df_merged.columns else 0
+            metrics["low_occ_count"]  = int((df_merged["occupancy_pct"] < 20).sum()) if "occupancy_pct" in df_merged.columns else 0
+        except Exception:
+            pass # Usar valores por defecto si algo falla en el cálculo puntual
+
+    # SIEMPRE devolvemos el template completo para no perder las instrucciones JSON
+    return SYSTEM_PROMPT_TEMPLATE.format(**metrics)
 
 
 # =============================================================================
