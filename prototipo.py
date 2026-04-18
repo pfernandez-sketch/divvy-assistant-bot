@@ -335,22 +335,20 @@ Columnas de estado actual (de statios_status):
   closest = df_merged.loc[df_merged['dist_temp'].idxmin()]
   resultado = f"{{closest['name']}} ({{closest['short_name']}})"
 
-━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES ━━━━
-Tienes tres DataFrames adicionales:
+━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES (Contexto Operativo) ━━━━
+Tienes tres DataFrames adicionales que sirven de COMPLEMENTO al estado real de df_merged. Úsalos para enriquecer tus recomendaciones y tomar decisiones inteligentes:
 
 `df_historico`: patron historico por estacion. Columnas: id, fecha, dia_de_la_semana, franja_horaria, estacion, de_salidas, de_llegadas, balance_neto, variabilidad_balance_neto, temp_media_c, estado_temperatura, precip_total_mm, intensidad_lluvia, humedad_media_pct, viento_medio_nudos, evento.
-Balance neto positivo = se vacia. Balance neto negativo = se llena.
+Úsalo para decidir entre estaciones cercanas: si una tiene balance_neto negativo (se llena) y otra positivo (se vacia), elige la que mejor convenga segun la necesidad del usuario.
 
-`df_clima`: condiciones meteorologicas. Columnas: id, fecha, franja_horaria, temp_media_c, estado_temperatura, precip_total_mm, intensidad_lluvia, humedad_media_pct, viento_medio_nudos.
+`df_clima`: condiciones meteorologicas. Úsalo para entender el contexto ambiental de la operacion.
 
-`df_eventos`: calendario de eventos. Columnas: fecha, nombre_evento, estadio, tipo_evento, franja_hora_inicio, evento_hora_inicio, evento_hora_fin_est, franja_demanda_inicio, franja_demanda_fin, duracion.
+`df_eventos`: calendario de eventos. Úsalo para anticipar picos de demanda mas alla de lo que dicen los datos en tiempo real.
 
-CUANDO USAR ESTOS DATOS:
-- Al elegir entre varias estaciones para dejar bicis, consulta df_historico para ver cual tiene balance neto mas negativo en ese dia y franja.
-- Si llueve o hace frio, identifica en df_historico que estaciones se vacian mas rapido.
-- Si hay evento en Soldier Field o Wrigley Field, usa df_eventos para anticipar saturacion.
-- Combina SIEMPRE df_distances (cercania) con df_historico (patron historico).
-- TIP DE PANDAS: Para comparar estaciones entre tablas usa siempre `.isin()`, ejemplo: `df_merged[df_merged['name'].isin(df_historico['estacion'])]`. Nunca compares directamente columnas de diferentes DataFrames.
+REGLAS DE DECISIÓN:
+- El estado actual (df_merged) es prioritario.
+- Los datos historicos justifican la recomendacion: "Te sugiero X porque aunque Y esta cerca, historicamente X tiene mejor balance de espacio en dias lluviosos/con partido".
+- TIP DE PANDAS: Para comparar estaciones entre tablas usa siempre `.isin()`, ejemplo: `df_merged[df_merged['name'].isin(df_historico['estacion'])]`.
 
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
@@ -699,6 +697,14 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
         a = np.sin(dp/2)**2 + np.cos(p1) * np.cos(p2) * np.sin(dl/2)**2
         return 2 * R * np.arcsin(np.sqrt(a))
     
+    # Adaptador para evitar errores de datetime en el LLM (maneja tanto datetime.now() como datetime.datetime.now())
+    class SmartDatetime:
+        def __getattr__(self, name): return getattr(datetime.datetime, name)
+        @property
+        def datetime(self): return datetime.datetime
+        @property
+        def timedelta(self): return datetime.timedelta
+
     # Contexto global para la ejecución del código generado
     local_vars = {
         "df_merged"    : df_merged,
@@ -708,7 +714,7 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
         "go"           : go,
         "np"           : np,
         "json"         : json,
-        "datetime"     : datetime.datetime,
+        "datetime"     : SmartDatetime(),
         "timedelta"    : datetime.timedelta,
         "haversine"    : haversine,
         "df_historico" : df_historico,
