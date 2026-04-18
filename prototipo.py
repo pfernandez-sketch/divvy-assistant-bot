@@ -360,7 +360,7 @@ CUANDO USAR ESTOS DATOS:
    {{"tipo": "fuera_de_alcance", "codigo": "", "interpretacion": "Lo siento, solo puedo responder preguntas sobre las estaciones de Divvy."}}
 
 ━━━━ REGLAS PARA EL CÓDIGO ━━━━
-- El código tiene acceso a: df_merged, df_distances, pd, px, go, np, haversine
+- El código tiene acceso a: df_merged, df_distances, pd, px, go, np, haversine, datetime, timedelta
 - NO uses import en el código. No escribas ninguna línea que empiece por 'import' o 'from ... import'.
 - Para gráficos: guarda el resultado en una variable llamada exactamente `fig`
 - Para texto/análisis: guarda el resultado en una variable llamada exactamente `resultado`. Puede ser un string, número, o DataFrame.
@@ -689,7 +689,8 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
         "go"           : go,
         "np"           : np,
         "json"         : json,
-        "datetime"     : datetime,
+        "datetime"     : datetime.datetime,
+        "timedelta"    : datetime.timedelta,
         "haversine"    : haversine,
         "df_historico" : df_historico,
         "df_clima"     : df_clima,
