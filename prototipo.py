@@ -7,12 +7,11 @@ from openai import OpenAI
 import json
 import re
 import os
-import time
 from datetime import datetime
 
-# ============================================================
-# CONFIGURACIÓN DE PÁGINA
-# ============================================================
+# =============================================================================
+# 1. CONFIGURACIÓN INICIAL DE LA PÁGINA
+# =============================================================================
 st.set_page_config(
     page_title="Divvy Analytics",
     page_icon="🚲",
@@ -20,9 +19,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ============================================================
-# CSS PREMIUM — ESTÉTICA DIVVY / LYFT
-# ============================================================
+# =============================================================================
+# 2. SISTEMA DE DISEÑO Y CSS (Estética Premium Divvy/Lyft)
+# =============================================================================
 DIVVY_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -267,19 +266,19 @@ html, body, [class*="css"] {
 
 st.markdown(DIVVY_CSS, unsafe_allow_html=True)
 
-# ============================================================
-# CONSTANTES
-# ============================================================
-MODEL_NAME = "gpt-4.1-mini"
+# =============================================================================
+# 3. CONSTANTES Y RUTAS DE ARCHIVOS
+# =============================================================================
+MODEL_NAME = "gpt-4o-mini"
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPACITY_FILE = os.path.join(DATA_DIR, "Statios_Capacity_17_48_3_20_2026.xlsx")
 STATUS_FILE   = os.path.join(DATA_DIR, "dataset_final (1).csv")
 INFO_FILE     = os.path.join(DATA_DIR, "infostations.xlsx")
 
-# ============================================================
-# SYSTEM PROMPT DINÁMICO
-# ============================================================
+# =============================================================================
+# 4. CONFIGURACIÓN DEL ASISTENTE (System Prompt)
+# =============================================================================
 SYSTEM_PROMPT_TEMPLATE = """
 Eres un asistente analítico experto en operaciones de Divvy, el sistema de bicicletas compartidas de Chicago operado por Lyft.
 
@@ -336,6 +335,26 @@ Columnas de estado actual (de statios_status):
   closest = df_merged.loc[df_merged['dist_temp'].idxmin()]
   resultado = f"{{closest['name']}} ({{closest['short_name']}})"
 
+━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES ━━━━
+Tienes tres DataFrames adicionales:
+
+`df_historico`: patron historico por estacion. Columnas: Estacion, Fecha,
+Dia de la semana, Franja horaria, # de Salidas, # de Llegadas, Balance neto,
+temp_media_c, intensidad_lluvia, Evento.
+Balance neto positivo = se vacia. Balance neto negativo = se llena.
+
+`df_clima`: condiciones meteorologicas historicas por franja horaria.
+
+`df_eventos`: calendario de eventos en estadios con franjas de impacto.
+
+CUANDO USAR ESTOS DATOS:
+- Al elegir entre varias estaciones para dejar bicis, consulta df_historico
+  para ver cual tiene balance neto mas negativo en ese dia y franja (mas espacio historicamente).
+- Si llueve o hace frio, identifica en df_historico que estaciones se vacian mas rapido.
+- Si hay evento en Soldier Field o Wrigley Field, usa df_eventos para anticipar saturacion.
+- Combina SIEMPRE df_distances (cercania) con df_historico (patron historico) para
+  dar la mejor recomendacion posible.
+
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
 2. Formato obligatorio:
@@ -370,14 +389,17 @@ Columnas de estado actual (de statios_status):
 ━━━━ REGLAS PARA LA INTERPRETACIÓN ━━━━
 - Máximo 3 frases
 - En español
-- Incluye números concretos del resultado
+- NUNCA uses {} o {variable} en la interpretación. El resultado ya se muestra arriba en azul.
+- La interpretación debe ser un comentario analítico sobre el resultado, NO una frase que intente reproducirlo.
+- Correcto: "Con 6 docks libres la estación tiene margen suficiente, pero está por debajo del 30% de capacidad libre."
+- Incorrecto: "La estación tiene {} amarres libres disponibles."
 - Señala insights operativos relevantes (ej: estaciones críticas, oportunidades de rebalanceo)
 
 ━━━━ REGLAS PARA RESPUESTAS OPERATIVAS ━━━━
 El asistente no solo responde preguntas, sino que actúa como un compañero operativo experimentado.
 Para cada respuesta, sigue este esquema:
 
-1. RESPONDE la pregunta con datos concretos del momento actual.
+1. RESPONDE la pregunta con datos concretos del momento actual. El valor numérico exacto ya aparece en la UI en azul. En la interpretación NO lo repitas, añade contexto operativo: qué significa ese número, qué acción recomiendas.
 2. ACONSEJA una acción inmediata y específica (estación concreta, distancia, docks libres).
 3. Si no tienes suficiente contexto (zona, estación, hora), PREGUNTA solo lo imprescindible antes de responder.
 
@@ -391,9 +413,9 @@ Reglas específicas:
 - Si la pregunta es ambigua, pregunta primero: "¿En qué estación estás ahora?" o "¿Necesitas dejar o recoger bicis?"
 """
 
-# ============================================================
-# CARGA Y PREPARACIÓN DE DATOS
-# ============================================================
+# =============================================================================
+# 5. MOTOR DE DATOS (Carga y Procesamiento)
+# =============================================================================
 @st.cache_data
 def load_data():
     """Carga, limpia y resamplea el dataset temporal con el maestro de estaciones."""
@@ -427,11 +449,12 @@ def load_data():
     df_status["fecha_hora"] = pd.to_datetime(df_status["fecha_hora"])
     df_status = df_status[df_status["station_id"].isin(master_ids)]
 
-    # 4. Merge
+    # 4. Fusionar datos de estado con metadatos de capacidad y ubicación
     df_full = pd.merge(df_status, df_cap[["station_id", "name", "short_name", "capacity", "lat", "lon"]], on="station_id", how="inner")
 
-    # 5. Resampling Temporal (Agrupar por ventanas de 15 min para ver todas las estaciones a la vez)
-    # Creamos un 'time_bucket' redondeando al intervalo más cercano
+    # 5. Resampling Temporal para Simulación
+    # Agrupamos los datos por ventanas de 15 min para sincronizar todas las estaciones en un mismo instante.
+    # Creamos un 'time_bucket' redondeando al intervalo más cercano.
     df_full["time_bucket"] = df_full["fecha_hora"].dt.floor("15min")
     
     # Dentro de cada ventana de 15 min, nos quedamos con la ÚLTIMA lectura de cada estación
@@ -442,7 +465,7 @@ def load_data():
         .reset_index()
     )
 
-    # 6. Columnas derivadas (sobre el dataset resampleado)
+    # 6. Cálculo de Columnas Derivadas (Ocupación, Bicis Clásicas, Docks)
     df_resampled["num_classic_bikes"] = (df_resampled["num_bikes_available"] - df_resampled["num_ebikes_available"]).clip(lower=0)
     df_resampled["docks_used"] = (df_resampled["capacity"] - df_resampled["num_docks_available"]).clip(lower=0)
     df_resampled["occupancy_pct"] = (df_resampled["num_bikes_available"] / df_resampled["capacity"] * 100).round(1).clip(0, 100)
@@ -454,15 +477,24 @@ def load_data():
     # Re-ordenar por tiempo y devolver la columna bucket como la principal de fecha
     df_resampled = df_resampled.sort_values("time_bucket")
     
-    return df_resampled, df_distances
+    # 8. Cargar Datos Históricos Definitivos
+    HISTORICO_FILE = os.path.join(DATA_DIR, "DATOS DEFINITIVOS.xlsx")
+    df_historico = pd.read_excel(HISTORICO_FILE, sheet_name='Balance Neto Diario (1)')
+    df_clima = pd.read_excel(HISTORICO_FILE, sheet_name='Hoja1')
+    df_eventos = pd.read_excel(HISTORICO_FILE, sheet_name='Hoja2', header=1)
+    
+    # Limpiar nombres de columnas
+    df_historico.columns = df_historico.columns.str.strip()
+    df_clima.columns = df_clima.columns.str.strip()
+    df_eventos.columns = df_eventos.columns.str.strip()
+    
+    return df_resampled, df_distances, df_historico, df_clima, df_eventos
 
 
-@st.cache_data
-def build_snapshot_dict(_df_all):
-    """Crea un diccionario de snapshots indexado por timestamp para acceso instantáneo."""
-    return {ts: grp.copy() for ts, grp in _df_all.groupby("time_bucket")}
 
-
+# =============================================================================
+# 7. MATRIZ DE DISTANCIAS
+# =============================================================================
 @st.cache_data
 def get_stations_distance_matrix(df):
     """
@@ -521,27 +553,38 @@ def build_system_prompt(df_merged: pd.DataFrame) -> str:
     )
 
 
-# ============================================================
-# LLAMADA A LA API DE OPENAI
-# ============================================================
-def get_openai_response(user_msg: str, system_prompt: str) -> str:
-    """Envía la pregunta al modelo GPT y devuelve el texto de respuesta."""
+# =============================================================================
+# 6. INTEGRACIÓN CON OpenAI (Generación de Código)
+# =============================================================================
+def get_openai_response(user_msg: str, system_prompt: str, chat_history: list = []) -> str:
+    """Envía la pregunta al modelo GPT con historial de conversación y devuelve el texto de respuesta."""
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
+    # Construir los mensajes incluyendo el historial previo
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Añadir historial (máximo últimos 6 mensajes para no inflar el contexto)
+    for msg in chat_history[-6:]:
+        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+    
+    # Añadir el mensaje actual
+    messages.append({"role": "user", "content": user_msg})
 
     response = client.chat.completions.create(
         model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_msg}
-        ],
+        messages=messages,
         temperature=0.2,
     )
     return response.choices[0].message.content
 
 
-# ============================================================
-# PARSING DE LA RESPUESTA
-# ============================================================
+# =============================================================================
+# 7. UTILIDADES DE PARSING Y EJECUCIÓN
+# =============================================================================
 def parse_response(raw: str) -> dict:
     """Limpia backticks y parsea el JSON devuelto por el LLM."""
     cleaned = raw.strip()
@@ -566,7 +609,7 @@ def parse_response(raw: str) -> dict:
 # ============================================================
 # EJECUCIÓN DEL CÓDIGO GENERADO
 # ============================================================
-def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame):
+def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame, df_historico: pd.DataFrame, df_clima: pd.DataFrame, df_eventos: pd.DataFrame):
     """
     Ejecuta el código generado por el LLM en un contexto controlado.
     Devuelve (fig, resultado) - cualquiera puede ser None.
@@ -576,6 +619,7 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame)
     code = re.sub(r'^\s*from\s+\w+\s+import\s+.*$', '', code, flags=re.MULTILINE)
 
     def haversine(lat1, lon1, lat2, lon2):
+        """Función auxiliar para calcular distancias entre coordenadas GPS."""
         R = 6371  # Radio de la Tierra en km
         p1, p2 = np.radians(lat1), np.radians(lat2)
         dp = np.radians(lat2 - lat1)
@@ -583,6 +627,7 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame)
         a = np.sin(dp/2)**2 + np.cos(p1) * np.cos(p2) * np.sin(dl/2)**2
         return 2 * R * np.arcsin(np.sqrt(a))
     
+    # Contexto global para la ejecución del código generado
     local_vars = {
         "df_merged"    : df_merged,
         "df_distances" : df_distances,
@@ -592,6 +637,9 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame)
         "np"           : np,
         "json"         : json,
         "haversine"    : haversine,
+        "df_historico" : df_historico,
+        "df_clima"     : df_clima,
+        "df_eventos"   : df_eventos,
     }
     exec(code, {}, local_vars)
     fig       = local_vars.get("fig", None)
@@ -599,9 +647,9 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame)
     return fig, resultado
 
 
-# ============================================================
-# PANTALLA DE LOGIN
-# ============================================================
+# =============================================================================
+# 8. GESTIÓN DE SEGURIDAD (Login)
+# =============================================================================
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
@@ -625,9 +673,9 @@ if not st.session_state.authenticated:
     st.stop()
 
 
-# ============================================================
-# APP PRINCIPAL
-# ============================================================
+# =============================================================================
+# 9. INTERFAZ DE USUARIO PRINCIPAL (Layout y Simulación)
+# =============================================================================
 
 # ── Header ──
 st.markdown("""
@@ -641,97 +689,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Cargar datos ──
-with st.spinner("Cargando motor de simulación y sincronizando estaciones..."):
-    df_all, df_distances = load_data()
+with st.spinner("Sincronizando estaciones..."):
+    df_all, df_distances, df_historico, df_clima, df_eventos = load_data()
     unique_times = sorted(df_all["time_bucket"].unique())
-    num_steps = len(unique_times)
 
-# ── Estado de Simulación ──
-if "sim_index" not in st.session_state:
-    st.session_state.sim_index = 0
-if "playing" not in st.session_state:
-    st.session_state.playing = False
-if "sim_speed" not in st.session_state:
-    st.session_state.sim_speed = 10.0
-
-# ── Panel de Control de Simulación ──
-st.markdown('<div class="sim-control-bar">', unsafe_allow_html=True)
-c1, c2, c3, c4, c5 = st.columns([1, 1, 1.5, 3, 2.5])
-
-with c1:
-    if st.button("▶️ Play" if not st.session_state.playing else "⏸️ Pause", use_container_width=True, key="btn_play"):
-        st.session_state.playing = not st.session_state.playing
-        st.rerun()
-        
-with c2:
-    if st.button("🔄 Reset", use_container_width=True, key="btn_reset"):
-        st.session_state.sim_index = 0
-        st.session_state.playing = False
-        st.rerun()
-
-with c3:
-    current_time = pd.to_datetime(unique_times[st.session_state.sim_index])
-    day_str = current_time.strftime("%A")
-    time_str = current_time.strftime("%H:%M")
-    st.markdown(f"""
-        <div class="sim-clock-card">
-            <div class="sim-clock-day">{day_str}</div>
-            <div class="sim-clock-time">{time_str}</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with c4:
-    st.markdown('<p style="font-size:12px; color:#8892a4; margin-bottom:0px;">Línea de tiempo (ventanas 15 min)</p>', unsafe_allow_html=True)
-    new_index = st.slider(
-        "Timeline",
-        min_value=0,
-        max_value=num_steps - 1,
-        value=st.session_state.sim_index,
-        label_visibility="collapsed",
-        key="slider_sim"
-    )
-    if new_index != st.session_state.sim_index:
-        st.session_state.sim_index = new_index
-        st.rerun()
-
-    st.markdown(
-        f"<div style='display:flex; justify-content:space-between; font-size:11px; color:#8892a4; margin-top:-8px;'>"
-        f"<span>{pd.to_datetime(unique_times[0]).strftime('%a %d/%m %H:%M')}</span>"
-        f"<span>{pd.to_datetime(unique_times[-1]).strftime('%a %d/%m %H:%M')}</span>"
-        f"</div>",
-        unsafe_allow_html=True
-    )
-
-with c5:
-    st.markdown('<p style="font-size:12px; color:#8892a4; margin-bottom:0px;">Velocidad</p>', unsafe_allow_html=True)
-    st.session_state.sim_speed = st.select_slider(
-        "Speed",
-        options=[1.0, 5.0, 10.0, 25.0, 50.0],
-        value=st.session_state.sim_speed,
-        label_visibility="collapsed",
-        key="slider_speed"
-    )
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ── Snapshot Actual de Datos ──
-snapshot_dict = build_snapshot_dict(df_all)
-current_dt = unique_times[st.session_state.sim_index]
-df_merged = snapshot_dict.get(current_dt, pd.DataFrame())
+# ── Obtener el estado de las estaciones (último snapshot disponible) ──
+current_dt = unique_times[-1]
+df_merged = df_all[df_all["time_bucket"] == current_dt].copy()
 
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
 system_prompt = build_system_prompt(df_merged)
-
-# ── Loop de Animación ──
-if st.session_state.playing:
-    if st.session_state.sim_index < num_steps - 1:
-        # Avanzar el índice
-        st.session_state.sim_index += 1
-        # Pausa proporcional a la velocidad
-        time.sleep(0.5 / st.session_state.sim_speed)
-        st.rerun()
-    else:
-        st.session_state.playing = False
-        st.rerun()
 
 # ── KPIs rápidos ──
 k1, k2, k3, k4 = st.columns(4)
@@ -751,9 +718,9 @@ st.markdown("<br>", unsafe_allow_html=True)
 tab_chat, tab_map = st.tabs(["🤖  Asistente Analytics", "🗺️  Mapa de Estaciones"])
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 1 — ASISTENTE ANALYTICS (Text-to-Code)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# =============================================================================
+# 10. TAB 1 — ASISTENTE ANALÍTICO (Conversacional)
+# =============================================================================
 with tab_chat:
     st.markdown('<p class="section-title">Asistente Analítico</p>', unsafe_allow_html=True)
     st.markdown('<p class="section-sub">Haz cualquier pregunta sobre las estaciones de Divvy en Chicago.</p>', unsafe_allow_html=True)
@@ -768,10 +735,10 @@ with tab_chat:
 
     # ── Chips de preguntas sugeridas ──
     suggested = [
-        "¿Qué estación está más llena?",
-        "¿Cuántas e-bikes hay en total?",
-        "Estaciones con menos del 20% de ocupación",
-        "Top 10 estaciones por capacidad",
+        "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
+        "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
+        "Hoy hay partido en Soldier Field, ¿qué estaciones evito y cuáles priorizo?",
+        "Me quedan 2 paradas, ¿cuál corre más riesgo de quedarse vacía primero?",
     ]
     cols_chips = st.columns(len(suggested))
     for i, q in enumerate(suggested):
@@ -785,29 +752,37 @@ with tab_chat:
         st.session_state.chip_fired = False        # apagar ANTES de procesar
         user_input_chip = st.session_state.pending_question
         st.session_state.pending_question = None
-        st.session_state.playing = False
 
         st.session_state.messages.append({"role": "user", "content": user_input_chip})
 
         with st.chat_message("assistant"):
             with st.spinner("🔍 Analizando datos..."):
                 try:
-                    raw = get_openai_response(user_input_chip, system_prompt)
+                    raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages)
                     parsed = parse_response(raw)
                     tipo   = parsed.get("tipo", "")
                     codigo = parsed.get("codigo", "")
-                    interp = parsed.get("interpretacion", "")
+                    
                     fig, resultado = None, None
-
                     if tipo == "fuera_de_alcance":
+                        interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
                         st.session_state.messages.append({"role": "assistant", "content": interp})
                     else:
                         if codigo.strip():
-                            fig, resultado = execute_code(codigo, df_merged, df_distances)
+                            fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
+
+                        # Segunda llamada: generar interpretación coherente con el resultado real
+                        resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
+                        interp_prompt = f"""El usuario preguntó: "{user_input_chip}"
+El código generó este resultado: {resultado_str}
+Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
+NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
+
+                        interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
                         
                         st.session_state.messages.append({
                             "role"      : "assistant",
-                            "content"   : f"💡 {interp}" if interp else "",
+                            "content"   : f"💡 {interp}",
                             "fig"       : fig,
                             "resultado" : resultado,
                             "code"      : codigo,
@@ -836,29 +811,37 @@ with tab_chat:
 
     # Input del usuario
     if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctricas disponibles?"):
-        st.session_state.playing = False
         st.session_state.messages.append({"role": "user", "content": user_input})
 
         # Generar respuesta
         with st.chat_message("assistant"):
             with st.spinner("🔍 Analizando datos..."):
                 try:
-                    raw = get_openai_response(user_input, system_prompt)
+                    raw = get_openai_response(user_input, system_prompt, st.session_state.messages)
                     parsed = parse_response(raw)
                     tipo   = parsed.get("tipo", "")
                     codigo = parsed.get("codigo", "")
-                    interp = parsed.get("interpretacion", "")
 
                     fig, resultado = None, None
                     if tipo == "fuera_de_alcance":
+                        interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
                         st.session_state.messages.append({"role": "assistant", "content": interp})
                     else:
                         if codigo.strip():
-                            fig, resultado = execute_code(codigo, df_merged, df_distances)
+                            fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
+
+                        # Segunda llamada: generar interpretación coherente con el resultado real
+                        resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
+                        interp_prompt = f"""El usuario preguntó: "{user_input}"
+El código generó este resultado: {resultado_str}
+Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
+NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
+
+                        interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
 
                         st.session_state.messages.append({
                             "role"      : "assistant",
-                            "content"   : f"💡 {interp}" if interp else "",
+                            "content"   : f"💡 {interp}",
                             "fig"       : fig,
                             "resultado" : resultado,
                             "code"      : codigo,
@@ -875,9 +858,9 @@ with tab_chat:
             st.rerun()
 
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAB 2 — MAPA INTERACTIVO DE ESTACIONES
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# =============================================================================
+# 11. MAPA INTERACTIVO Y FILTRO DE ESTACIONES
+# =============================================================================
 with tab_map:
     st.markdown('<p class="section-title">Mapa de Estaciones Divvy</p>', unsafe_allow_html=True)
     st.markdown('<p class="section-sub">Todas las estaciones de Chicago — color según % de ocupación en tiempo real.</p>', unsafe_allow_html=True)
