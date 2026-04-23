@@ -711,7 +711,25 @@ with st.spinner("Sincronizando estaciones..."):
     df_all, df_distances, df_historico, df_clima, df_eventos = load_data()
     unique_times = sorted(df_all["time_bucket"].unique())
 
-# ── Obtener el estado de las estaciones 
+# ── Obtener el estado de las estaciones (último snapshot disponible) ──
+df_merged = pd.DataFrame()
+current_dt = None
+
+if unique_times:
+    current_dt = unique_times[-1]
+    for dt in reversed(unique_times):
+        df_merged = df_all[df_all["time_bucket"] == dt].copy()
+        if not df_merged.empty:
+            current_dt = dt
+            break
+else:
+    st.warning("⚠️ No se han encontrado datos históricos en los archivos proporcionados.")
+
+
+# ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
+system_prompt = build_system_prompt(df_merged)
+
+
 # =============================================================================
 # 10. ASISTENTE ANALÍTICO (Conversacional)
 # =============================================================================
