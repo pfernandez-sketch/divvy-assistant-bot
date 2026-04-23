@@ -343,9 +343,9 @@ Cuando analices una situación o recomiendes un reparto, sigue ESTA prioridad es
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
 2. Formato obligatorio:
-   {"tipo": "grafico", "codigo": "...", "interpretacion": "..."}
-   {"tipo": "texto_analitico", "codigo": "...", "interpretacion": "..."}
-   {"tipo": "fuera_de_alcance", "codigo": "", "interpretacion": "Lo siento, solo puedo responder preguntas sobre las estaciones de Divvy."}
+   {{"tipo": "grafico", "codigo": "...", "interpretacion": "..."}}
+   {{"tipo": "texto_analitico", "codigo": "...", "interpretacion": "..."}}
+   {{"tipo": "fuera_de_alcance", "codigo": "", "interpretacion": "Lo siento, solo puedo responder preguntas sobre las estaciones de Divvy."}}
 
 ━━━━ REGLAS PARA EL CÓDIGO ━━━━
 - El código tiene acceso a: df_merged, df_distances, pd, px, go, np, haversine, datetime, timedelta
