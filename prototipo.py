@@ -295,8 +295,9 @@ Columnas de estado actual (de statios_status):
 ━━━━ GEOPROCESAMIENTO (Distancias y Ubicaciones) ━━━━
 - Tienes acceso a un DataFrame llamado `df_distances` con columnas: origin_id, destination_id, distance_km.
 - Úsalo para encontrar estaciones cercanas entre sí filtrando siempre distance_km > 0.
-- Cuando el usuario pregunte por la estación más cercana a un lugar de Chicago,
-  usa estas coordenadas y calcula con numpy:
+- Cuando el usuario pregunte por un lugar o evento en un punto de Chicago (Millennium Park, Soldier Field, etc.), usa las COORDENADAS DE REFERENCIA.
+- CRÍTICO: Estos lugares (Soldier Field, etc.) NO son nombres de estaciones. Son puntos geográficos. NO busques `df_merged['name'] == 'Soldier Field'`. En su lugar, usa el código de proximidad para encontrar las estaciones reales más cercanas a ese punto.
+- Usa estas coordenadas y calcula con numpy:
 
   COORDENADAS DE REFERENCIA:
   * Millennium Park:          (41.8827, -87.6226)
