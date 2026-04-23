@@ -781,327 +781,154 @@ with st.spinner("Sincronizando estaciones..."):
     df_all, df_distances, df_historico, df_clima, df_eventos = load_data()
     unique_times = sorted(df_all["time_bucket"].unique())
 
-# ── Obtener el estado de las estaciones (último snapshot disponible) ──
-df_merged = pd.DataFrame()
-current_dt = None
-
-if unique_times:
-    current_dt = unique_times[-1]
-    for dt in reversed(unique_times):
-        df_merged = df_all[df_all["time_bucket"] == dt].copy()
-        if not df_merged.empty:
-            current_dt = dt
-            break
-else:
-    st.warning("⚠️ No se han encontrado datos históricos en los archivos proporcionados.")
-
-
-# ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
-system_prompt = build_system_prompt(df_merged)
-
-# ── KPIs rápidos ──
-k1, k2, k3, k4 = st.columns(4)
-with k1:
-    st.metric("🏢 Estaciones", f"{len(df_merged):,}")
-with k2:
-
-    st.metric("🚲 Bicis disponibles", f"{int(df_merged['num_bikes_available'].sum()):,}")
-with k3:
-    st.metric("⚡ E-Bikes disponibles", f"{int(df_merged['num_ebikes_available'].sum()):,}")
-with k4:
-    avg_occ = df_merged["occupancy_pct"].mean() if not df_merged.empty else 0
-    st.metric("📊 Ocupación media", f"{avg_occ:.1f}%")
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ── Tabs ──
-tab_chat, tab_map = st.tabs(["🤖  Asistente Analytics", "🗺️  Mapa de Estaciones"])
-
-
+# ── Obtener el estado de las estaciones 
 # =============================================================================
-# 10. TAB 1 — ASISTENTE ANALÍTICO (Conversacional)
+# 10. ASISTENTE ANALÍTICO (Conversacional)
 # =============================================================================
-with tab_chat:
-    st.markdown('<p class="section-title">Asistente Analítico</p>', unsafe_allow_html=True)
-    st.markdown('<p class="section-sub">Haz cualquier pregunta sobre las estaciones de Divvy en Chicago.</p>', unsafe_allow_html=True)
+st.markdown('<p class="section-title">Asistente Analítico</p>', unsafe_allow_html=True)
+st.markdown('<p class="section-sub">Haz cualquier pregunta sobre las estaciones de Divvy en Chicago.</p>', unsafe_allow_html=True)
 
-    # ── Inicialización de session_state ──
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "chip_fired" not in st.session_state:
-        st.session_state.chip_fired = False
-    if "pending_question" not in st.session_state:
-        st.session_state.pending_question = None
+# ── Inicialización de session_state ──
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "chip_fired" not in st.session_state:
+    st.session_state.chip_fired = False
+if "pending_question" not in st.session_state:
+    st.session_state.pending_question = None
 
-    # ── Chips de preguntas sugeridas ──
-    suggested = [
-        "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
-        "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
-        "Hoy hay partido en Soldier Field, ¿qué estaciones evito y cuáles priorizo?",
-        "Me quedan 2 paradas, ¿cuál corre más riesgo de quedarse vacía primero?",
-    ]
-    cols_chips = st.columns(len(suggested))
-    for i, q in enumerate(suggested):
-        with cols_chips[i]:
-            if st.button(q, key=f"chip_{i}", use_container_width=True):
-                st.session_state.pending_question = q
-                st.session_state.chip_fired = True
+# ── Chips de preguntas sugeridas ──
+suggested = [
+    "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
+    "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
+    "Hoy hay partido en Soldier Field, ¿qué estaciones evito y cuáles priorizo?",
+    "Me quedan 2 paradas, ¿cuál corre más riesgo de quedarse vacía primero?",
+]
+cols_chips = st.columns(len(suggested))
+for i, q in enumerate(suggested):
+    with cols_chips[i]:
+        if st.button(q, key=f"chip_{i}", use_container_width=True):
+            st.session_state.pending_question = q
+            st.session_state.chip_fired = True
 
-    # ── Procesar chip (una sola vez) ──
-    if st.session_state.chip_fired and st.session_state.pending_question:
-        st.session_state.chip_fired = False        # apagar ANTES de procesar
-        user_input_chip = st.session_state.pending_question
-        st.session_state.pending_question = None
+# ── Procesar chip (una sola vez) ──
+if st.session_state.chip_fired and st.session_state.pending_question:
+    st.session_state.chip_fired = False        # apagar ANTES de procesar
+    user_input_chip = st.session_state.pending_question
+    st.session_state.pending_question = None
 
-        st.session_state.messages.append({"role": "user", "content": user_input_chip})
+    st.session_state.messages.append({"role": "user", "content": user_input_chip})
 
-        with st.chat_message("assistant"):
-            with st.spinner("🔍 Analizando datos..."):
-                try:
-                    raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages)
-                    parsed = parse_response(raw)
-                    tipo   = parsed.get("tipo", "")
-                    codigo = parsed.get("codigo", "")
-                    
-                    fig, resultado = None, None
-                    if tipo == "fuera_de_alcance":
-                        interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
-                        st.session_state.messages.append({
-                            "role"      : "assistant", 
-                            "content"   : interp,
-                            "raw_debug" : parsed.get("raw_debug")
-                        })
-                    else:
-                        if codigo.strip():
-                            fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
-
-                        # Segunda llamada: generar interpretación coherente con el resultado real
-                        resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
-                        interp_prompt = f"""El usuario preguntó: "{user_input_chip}"
-El código generó este resultado: {resultado_str}
-Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
-NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
-
-                        interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
-                        
-                        st.session_state.messages.append({
-                            "role"      : "assistant",
-                            "content"   : f"💡 {interp}",
-                            "fig"       : fig,
-                            "resultado" : resultado,
-                            "code"      : codigo,
-                            "raw_debug" : parsed.get("raw_debug"),
-                        })
-                except Exception as e:
-                    st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
-        
-        st.rerun()
-
-    # ── Renderizar historial ──
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            if msg.get("fig"):
-                st.plotly_chart(msg["fig"], use_container_width=True)
-            if msg.get("resultado") is not None:
-                res = msg["resultado"]
-                if isinstance(res, pd.DataFrame):
-                    st.dataframe(res, use_container_width=True)
+    with st.chat_message("assistant"):
+        with st.spinner("🔍 Analizando datos..."):
+            try:
+                raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages)
+                parsed = parse_response(raw)
+                tipo   = parsed.get("tipo", "")
+                codigo = parsed.get("codigo", "")
+                
+                fig, resultado = None, None
+                if tipo == "fuera_de_alcance":
+                    interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
+                    st.session_state.messages.append({
+                        "role"      : "assistant", 
+                        "content"   : interp,
+                        "raw_debug" : parsed.get("raw_debug")
+                    })
                 else:
-                    st.info(f"**Resultado:** {res}")
-            if msg.get("content"):
-                st.markdown(msg["content"])
-            if msg.get("code"):
-                with st.expander("🔍 Ver código generado", expanded=False):
-                    st.code(msg["code"], language="python")
-            if msg.get("raw_debug"):
-                with st.expander("🛠️ Debug: Respuesta original del modelo", expanded=False):
-                    st.text(msg["raw_debug"])
+                    if codigo.strip():
+                        fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
 
-    # Input del usuario
-    if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctricas disponibles?"):
-        st.session_state.messages.append({"role": "user", "content": user_input})
-
-        # Generar respuesta
-        with st.chat_message("assistant"):
-            with st.spinner("🔍 Analizando datos..."):
-                try:
-                    raw = get_openai_response(user_input, system_prompt, st.session_state.messages)
-                    parsed = parse_response(raw)
-                    tipo   = parsed.get("tipo", "")
-                    codigo = parsed.get("codigo", "")
-
-                    fig, resultado = None, None
-                    if tipo == "fuera_de_alcance":
-                        interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
-                        st.session_state.messages.append({
-                            "role"      : "assistant", 
-                            "content"   : interp,
-                            "raw_debug" : parsed.get("raw_debug")
-                        })
-                    else:
-                        if codigo.strip():
-                            fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
-
-                        # Segunda llamada: generar interpretación coherente con el resultado real
-                        resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
-                        interp_prompt = f"""El usuario preguntó: "{user_input}"
+                    # Segunda llamada: generar interpretación coherente con el resultado real
+                    resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
+                    interp_prompt = f"""El usuario preguntó: "{user_input_chip}"
 El código generó este resultado: {resultado_str}
 Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
 NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
 
-                        interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
+                    interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
+                    
+                    st.session_state.messages.append({
+                        "role"      : "assistant",
+                        "content"   : f"💡 {interp}",
+                        "fig"       : fig,
+                        "resultado" : resultado,
+                        "code"      : codigo,
+                        "raw_debug" : parsed.get("raw_debug"),
+                    })
+            except Exception as e:
+                st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
+    
+    st.rerun()
 
-                        st.session_state.messages.append({
-                            "role"      : "assistant",
-                            "content"   : f"💡 {interp}",
-                            "fig"       : fig,
-                            "resultado" : resultado,
-                            "code"      : codigo,
-                            "raw_debug" : parsed.get("raw_debug"),
-                        })
-                except Exception as e:
-                    st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
-        
+# ── Renderizar historial ──
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        if msg.get("fig"):
+            st.plotly_chart(msg["fig"], use_container_width=True)
+        if msg.get("resultado") is not None:
+            res = msg["resultado"]
+            if isinstance(res, pd.DataFrame):
+                st.dataframe(res, use_container_width=True)
+            else:
+                st.info(f"**Resultado:** {res}")
+        if msg.get("content"):
+            st.markdown(msg["content"])
+        if msg.get("code"):
+            with st.expander("🔍 Ver código generado", expanded=False):
+                st.code(msg["code"], language="python")
+        if msg.get("raw_debug"):
+            with st.expander("🛠️ Debug: Respuesta original del modelo", expanded=False):
+                st.text(msg["raw_debug"])
+
+# Input del usuario
+if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctricas disponibles?"):
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    # Generar respuesta
+    with st.chat_message("assistant"):
+        with st.spinner("🔍 Analizando datos..."):
+            try:
+                raw = get_openai_response(user_input, system_prompt, st.session_state.messages)
+                parsed = parse_response(raw)
+                tipo   = parsed.get("tipo", "")
+                codigo = parsed.get("codigo", "")
+
+                fig, resultado = None, None
+                if tipo == "fuera_de_alcance":
+                    interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
+                    st.session_state.messages.append({
+                        "role"      : "assistant", 
+                        "content"   : interp,
+                        "raw_debug" : parsed.get("raw_debug")
+                    })
+                else:
+                    if codigo.strip():
+                        fig, resultado = execute_code(codigo, df_merged, df_distances, df_historico, df_clima, df_eventos)
+
+                    # Segunda llamada: generar interpretación coherente con el resultado real
+                    resultado_str = str(resultado) if resultado is not None else "Sin resultado numérico"
+                    interp_prompt = f"""El usuario preguntó: "{user_input}"
+El código generó este resultado: {resultado_str}
+Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
+NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
+
+                    interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
+
+                    st.session_state.messages.append({
+                        "role"      : "assistant",
+                        "content"   : f"💡 {interp}",
+                        "fig"       : fig,
+                        "resultado" : resultado,
+                        "code"      : codigo,
+                        "raw_debug" : parsed.get("raw_debug"),
+                    })
+            except Exception as e:
+                st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
+    
+    st.rerun()
+
+# Botón limpiar historial
+if st.session_state.messages:
+    if st.button("🗑️ Limpiar conversación"):
+        st.session_state.messages = []
         st.rerun()
-
-    # Botón limpiar historial
-    if st.session_state.messages:
-        if st.button("🗑️ Limpiar conversación"):
-            st.session_state.messages = []
-            st.rerun()
-
-
-# =============================================================================
-# 11. MAPA INTERACTIVO Y FILTRO DE ESTACIONES
-# =============================================================================
-with tab_map:
-    st.markdown('<p class="section-title">Mapa de Estaciones Divvy</p>', unsafe_allow_html=True)
-    st.markdown('<p class="section-sub">Todas las estaciones de Chicago — color según % de ocupación en tiempo real.</p>', unsafe_allow_html=True)
-
-    # ── Controles de filtro ──
-    col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
-
-    with col_f1:
-        c_min = int(df_merged["capacity"].min()) if not df_merged.empty else 0
-        c_max = int(df_merged["capacity"].max()) if not df_merged.empty else 100
-        # Streamlit requiere que min < max
-        if c_min == c_max:
-            c_max = c_min + 1
-            
-        cap_range = st.slider(
-            "Filtrar por capacidad mínima (docks)",
-            min_value=c_min,
-            max_value=c_max,
-            value=c_min,
-            step=1,
-        )
-    with col_f2:
-        occ_range = st.slider(
-            "Filtrar por ocupación (%)",
-            min_value=0, max_value=100,
-            value=(0, 100),
-            step=5,
-        )
-    with col_f3:
-        only_ebike = st.checkbox("Solo estaciones con e-bikes", value=False)
-
-    # ── Aplicar filtros ──
-    df_map = df_merged.copy()
-    df_map = df_map[df_map["capacity"] >= cap_range]
-    df_map = df_map[
-        (df_map["occupancy_pct"] >= occ_range[0]) &
-        (df_map["occupancy_pct"] <= occ_range[1])
-    ]
-    if only_ebike:
-        df_map = df_map[df_map["num_ebikes_available"] > 0]
-
-    st.markdown(f"<div style='margin-bottom:12px;'><span class='info-chip'>🗺️ {len(df_map)} estaciones mostradas</span></div>", unsafe_allow_html=True)
-
-    # ── Construir mapa ──
-    snapshot_time = pd.to_datetime(current_dt).strftime('%A %d/%m · %H:%M') if current_dt else "No disponible"
-    fig_map = px.scatter_mapbox(
-        df_map,
-        lat="lat",
-        lon="lon",
-        color="occupancy_pct",
-        size="capacity",
-        size_max=18,
-        color_continuous_scale=[
-            [0.0,  "#1a237e"],
-            [0.2,  "#0097a7"],
-            [0.5,  "#00bcd4"],
-            [0.75, "#ffc107"],
-            [1.0,  "#f44336"],
-        ],
-        range_color=[0, 100],
-        hover_name="name",
-        hover_data={
-            "lat"                  : False,
-            "lon"                  : False,
-            "capacity"             : True,
-            "num_bikes_available"  : True,
-            "num_ebikes_available" : True,
-            "num_classic_bikes"    : True,
-            "num_docks_available"  : True,
-            "occupancy_pct"        : ":.1f",
-        },
-        labels={
-            "occupancy_pct"        : "Ocupación (%)",
-            "capacity"             : "Capacidad",
-            "num_bikes_available"  : "Bicis disponibles",
-            "num_ebikes_available" : "E-Bikes",
-            "num_classic_bikes"    : "Clásicas",
-            "num_docks_available"  : "Docks libres",
-        },
-        mapbox_style="carto-darkmatter",
-        center={"lat": 41.8827, "lon": -87.6233},
-        zoom=11.5,
-        template="plotly_dark",
-        title=f"Estaciones Divvy en Chicago — {len(df_map)} estaciones activas · {snapshot_time}",
-    )
-
-    fig_map.update_layout(
-        paper_bgcolor="#0c0e14",
-        plot_bgcolor="#0c0e14",
-        margin=dict(l=0, r=0, t=40, b=0),
-        height=680,
-        coloraxis_colorbar=dict(
-            title=dict(text="Ocupación (%)", font=dict(color="#e8eaf0")),
-            tickfont=dict(color="#e8eaf0"),
-            bgcolor="#141820",
-            bordercolor="#1e2535",
-            borderwidth=1,
-            tickvals=[0, 20, 40, 60, 80, 100],
-            ticktext=["0%", "20%", "40%", "60%", "80%", "100%"],
-        ),
-        title_font=dict(color="#e8eaf0", size=16),
-    )
-
-    st.plotly_chart(fig_map, use_container_width=True)
-
-    # ── Tabla resumen debajo del mapa ──
-    with st.expander("📋 Ver datos de estaciones filtradas", expanded=False):
-        display_cols = ["name", "short_name", "capacity", "num_bikes_available",
-                        "num_ebikes_available", "num_classic_bikes",
-                        "num_docks_available", "occupancy_pct"]
-        st.dataframe(
-            df_map[display_cols]
-            .sort_values("occupancy_pct", ascending=False)
-            .reset_index(drop=True),
-            use_container_width=True,
-            column_config={
-                "name"                 : "Estación",
-                "short_name"           : "Código",
-                "capacity"             : "Capacidad",
-                "num_bikes_available"  : "Bicis disp.",
-                "num_ebikes_available" : "⚡ E-Bikes",
-                "num_classic_bikes"    : "🚲 Clásicas",
-                "num_docks_available"  : "Docks libres",
-                "occupancy_pct"        : st.column_config.ProgressColumn(
-                    "Ocupación",
-                    min_value=0,
-                    max_value=100,
-                    format="%.1f%%",
-                ),
-            },
-        )
