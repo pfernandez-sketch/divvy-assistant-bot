@@ -391,7 +391,6 @@ A continuación tienes ejemplos reales de preguntas y cómo deberías responderl
 
 {test_cases}
 """
-"""
 
 # =============================================================================
 # 5. MOTOR DE DATOS (Carga y Procesamiento)
