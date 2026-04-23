@@ -748,9 +748,9 @@ st.markdown("""
 <div class="divvy-header">
     <div>
         <div class="divvy-logo-text">DIV<span>VY</span></div>
-        <div class="divvy-subtitle">Analytics Dashboard · Chicago, IL</div>
+        <div class="divvy-subtitle">Analytics Dashboard - Chicago, IL</div>
     </div>
-    <div class="divvy-badge">⚡ LIVE DATA</div>
+    <div class="divvy-badge">LIVE DATA</div>
 </div>
 """, unsafe_allow_html=True)
 
