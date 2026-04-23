@@ -748,7 +748,10 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
     
     # Adaptador para evitar errores de datetime en el LLM (maneja tanto datetime.now() como datetime.datetime.now())
     class SmartDatetime:
-        def __getattr__(self, name): return getattr(datetime.datetime, name)
+        def __call__(self, *args, **kwargs):
+            return datetime.datetime(*args, **kwargs)
+        def __getattr__(self, name): 
+            return getattr(datetime.datetime, name)
         @property
         def datetime(self): return datetime.datetime
         @property
