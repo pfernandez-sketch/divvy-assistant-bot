@@ -321,7 +321,7 @@ Columnas de estado actual (de statios_status):
   ref_lat, ref_lon = 41.8827, -87.6226
   df_merged['dist_temp'] = np.sqrt((df_merged['lat'] - ref_lat)**2 + (df_merged['lon'] - ref_lon)**2)
   closest = df_merged.loc[df_merged['dist_temp'].idxmin()]
-  resultado = f"{closest['name']} ({closest['short_name']})"
+  resultado = f"{{closest['name']}} ({{closest['short_name']}})"
 
 ━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES (Contexto Operativo) ━━━━
 Tienes tres DataFrames adicionales que sirven de COMPLEMENTO al estado real de df_merged. Úsalos para enriquecer tus recomendaciones y tomar decisiones inteligentes:
@@ -366,7 +366,7 @@ Cuando analices una situación o recomiendes un reparto, sigue ESTA prioridad es
       resultado = 'No se encontró ninguna estación con ese nombre.'
   else:
       station = matches.iloc[0]
-      resultado = f"{station['name']}: {station['num_docks_available']} docks libres"
+      resultado = f"{{station['name']}}: {{station['num_docks_available']}} docks libres"
 
 ━━━━ BÚSQUEDA ROBUSTA DE ESTACIONES (CRÍTICO) ━━━━
 Los operativos escriben en el teléfono con errores de capitalización, abreviaciones y nombres parciales.
@@ -419,7 +419,7 @@ Formato: "[Nombre] — [X] docks libres de [Y] (ocupación: [Z]%) — a [D] metr
 ━━━━ REGLAS PARA LA INTERPRETACIÓN ━━━━
 - Máximo 3 frases
 - En español
-- NUNCA uses {{}} o {variable} en la interpretación. El resultado ya se muestra arriba en azul.
+- NUNCA uses {{}} o {{variable}} en la interpretación. El resultado ya se muestra arriba en azul.
 - La interpretación debe ser un comentario analítico sobre el resultado, NO una frase que intente reproducirlo.
 - Correcto: "Con 6 docks libres la estación tiene margen suficiente, pero está por debajo del 30% de capacidad libre."
 - Incorrecto: "La estación tiene {{}} amarres libres disponibles."
