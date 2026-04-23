@@ -801,7 +801,6 @@ suggested = [
     "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
     "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
     "Hoy hay partido en Soldier Field, ¿qué estaciones evito y cuáles priorizo?",
-    "Me quedan 2 paradas, ¿cuál corre más riesgo de quedarse vacía primero?",
 ]
 cols_chips = st.columns(len(suggested))
 for i, q in enumerate(suggested):
