@@ -248,7 +248,7 @@ Columnas de estado actual (de statios_status):
   - num_docks_disabled    : int — docks no operativos
   - is_returning          : int — 1 si acepta devoluciones, 0 si no
   - docks_used            : int — docks ocupados (= capacity - num_docks_available)
-  - occupancy_pct         : float — porcentaje de ocupación (= num_bikes_available / capacity * 100)
+  - occupancy_pct         : float — porcentaje de ocupación (= (capacity - num_docks_available) / capacity * 100)
 
 ━━━━ DATOS DEL SISTEMA ━━━━
   - Total de estaciones: {total_stations}
@@ -470,7 +470,7 @@ def load_data():
     # 6. Cálculo de Columnas Derivadas
     df_resampled["num_classic_bikes"] = (df_resampled["num_bikes_available"] - df_resampled["num_ebikes_available"]).clip(lower=0)
     df_resampled["docks_used"] = (df_resampled["capacity"] - df_resampled["num_docks_available"]).clip(lower=0)
-    df_resampled["occupancy_pct"] = (df_resampled["num_bikes_available"] / df_resampled["capacity"] * 100).round(1).clip(0, 100)
+    df_resampled["occupancy_pct"] = ((df_resampled["capacity"] - df_resampled["num_docks_available"]) / df_resampled["capacity"] * 100).round(1).clip(0, 100)
 
     # 7. Matriz de distancias
     df_unique_stations = df_resampled.drop_duplicates(subset="station_id")[["station_id", "lat", "lon"]]
