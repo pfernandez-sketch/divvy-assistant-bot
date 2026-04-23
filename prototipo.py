@@ -86,14 +86,17 @@ html, body, [class*="css"] {
 
 /* ── Chat input (FIX PARA MÓVIL) ── */
 .stChatInputContainer {
-    background: #141820 !important;
+    background-color: #141820 !important;
     border: 1px solid #00bcd4 !important;
     border-radius: 12px !important;
 }
 .stChatInput textarea {
-    background: transparent !important;
+    background-color: #141820 !important;
     color: #ffffff !important; /* Forzamos blanco puro para visibilidad */
     -webkit-text-fill-color: #ffffff !important; /* Fix para Safari/iOS */
+}
+[data-testid="stChatInput"] {
+    background-color: #141820 !important;
 }
 
 /* ── Buttons ── */
