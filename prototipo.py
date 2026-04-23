@@ -219,13 +219,22 @@ def load_test_cases() -> str:
     except Exception:
         return ""
 
+def get_time_slot(dt) -> str:
+    """Traduce la hora en franjas horarias compatibles con el histórico."""
+    if dt is None: return "Sin definir"
+    hour = dt.hour
+    if 0 <= hour < 6: return "Madrugada"
+    elif 6 <= hour < 12: return "Mañana"
+    elif 12 <= hour < 18: return "Tarde"
+    else: return "Noche"
+
 TEST_CASES_CONTEXT = load_test_cases()
 
 # =============================================================================
 # 4. CONFIGURACIÓN DEL ASISTENTE (System Prompt)
 # =============================================================================
 SYSTEM_PROMPT_TEMPLATE = """
-Eres un asistente analítico experto en operaciones de Divvy, el sistema de bicicletas compartidas de Chicago operado por Lyft.
+Eres un experto en logística de rebalanceo de Divvy (Chicago). Tu función es asistir a los TRANSPORTISTAS que recorren la ciudad moviendo bicicletas para optimizar la red. Tus respuestas deben ser directas, analíticas y con un tono operativo y profesional.
 
 Tienes acceso a un DataFrame de pandas llamado `df_merged` con información en tiempo real de las estaciones.
 
@@ -258,6 +267,8 @@ Columnas de estado actual (de statios_status):
   - Rango de occupancy_pct: {occ_min:.1f}% - {occ_max:.1f}%
   - Estaciones con >85% de ocupación: {high_occ_count}
   - Estaciones con <15% de ocupación: {low_occ_count}
+  - Momento de la consulta: {current_dt}
+  - Franja horaria actual: {current_slot} (usa este dato para cruzar con df_historico[franja_horaria])
 
 ━━━━ GEOPROCESAMIENTO (Distancias y Ubicaciones) ━━━━
 - Tienes acceso a un DataFrame llamado `df_distances` con columnas: origin_id, destination_id, distance_km.
@@ -535,7 +546,7 @@ def get_stations_distance_matrix(df):
     return df_dist
 
 
-def build_system_prompt(df_merged: pd.DataFrame) -> str:
+def build_system_prompt(df_merged: pd.DataFrame, dt: datetime.datetime = None) -> str:
     """Inyecta métricas reales del dataset en el System Prompt pulsando siempre el template completo."""
     
     # Valores por defecto por si el DataFrame está vacío o fallan los cálculos
@@ -544,7 +555,9 @@ def build_system_prompt(df_merged: pd.DataFrame) -> str:
         "cap_min": 0, "cap_max": 0, "total_stations": 0, "total_capacity": 0,
         "total_bikes": 0, "total_ebikes": 0, "occ_min": 0.0, "occ_max": 0.0,
         "high_occ_count": 0, "low_occ_count": 0,
-        "test_cases": TEST_CASES_CONTEXT
+        "test_cases": TEST_CASES_CONTEXT,
+        "current_dt": dt.strftime("%Y-%m-%d %H:%M:%S") if dt else "N/A",
+        "current_slot": get_time_slot(dt)
     }
 
     if not df_merged.empty:
@@ -778,7 +791,7 @@ else:
 
 
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
-system_prompt = build_system_prompt(df_merged)
+system_prompt = build_system_prompt(df_merged, current_dt)
 
 
 # =============================================================================
