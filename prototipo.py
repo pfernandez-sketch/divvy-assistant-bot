@@ -723,7 +723,7 @@ if not st.session_state.authenticated:
     st.markdown("""
     <div class="login-container">
         <div class="login-logo">DIV<span>VY</span></div>
-        <div class="login-tagline">Analytics Dashboard - Chicago 🚲</div>
+        <div class="login-tagline">Analytics Dashboard - Chicago</div>
     </div>
     """, unsafe_allow_html=True)
 
