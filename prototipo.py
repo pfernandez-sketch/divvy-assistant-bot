@@ -205,6 +205,17 @@ DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPACITY_FILE = os.path.join(DATA_DIR, "Statios_Capacity_17_48_3_20_2026.xlsx")
 STATUS_FILE   = os.path.join(DATA_DIR, "dataset_final (1).csv")
 INFO_FILE     = os.path.join(DATA_DIR, "infostations.xlsx")
+TEST_CASES_FILE = os.path.join(DATA_DIR, "test_cases.txt")
+
+def load_test_cases() -> str:
+    """Carga los casos de prueba como contexto de few-shot para el LLM."""
+    try:
+        with open(TEST_CASES_FILE, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
+TEST_CASES_CONTEXT = load_test_cases()
 
 # =============================================================================
 # 4. CONFIGURACIÓN DEL ASISTENTE (System Prompt)
@@ -344,6 +355,12 @@ Reglas específicas:
 - Usa lenguaje directo y accionable: "mueve X bicis a Y", "prioriza Z", "evita W".
 - Nunca des una respuesta sin una recomendación concreta al final, aunque sea mínima.
 - Si la pregunta es ambigua, pregunta primero: "¿En qué estación estás ahora?" o "¿Necesitas dejar o recoger bicis?"
+
+━━━━ EJEMPLOS DE RESPUESTAS IDEALES ━━━━
+A continuación tienes ejemplos reales de preguntas y cómo deberías responderlas.
+Úsalos como referencia de formato, tono y nivel de detalle esperado:
+
+{test_cases}
 """
 
 # =============================================================================
@@ -493,7 +510,8 @@ def build_system_prompt(df_merged: pd.DataFrame) -> str:
         "name_example": "Millennium Park",
         "cap_min": 0, "cap_max": 0, "total_stations": 0, "total_capacity": 0,
         "total_bikes": 0, "total_ebikes": 0, "occ_min": 0.0, "occ_max": 0.0,
-        "high_occ_count": 0, "low_occ_count": 0
+        "high_occ_count": 0, "low_occ_count": 0,
+        "test_cases": TEST_CASES_CONTEXT
     }
 
     if not df_merged.empty:
