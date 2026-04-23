@@ -84,19 +84,16 @@ html, body, [class*="css"] {
     color: #e8eaf0 !important;
 }
 
-/* ── Chat input (FIX PARA MÓVIL) ── */
+/* ── Chat input ── */
 .stChatInputContainer {
-    background-color: #141820 !important;
-    border: 1px solid #00bcd4 !important;
+    background: #141820 !important;
+    border: 1px solid #1e2535 !important;
     border-radius: 12px !important;
 }
 .stChatInput textarea {
-    background-color: #141820 !important;
-    color: #ffffff !important; /* Forzamos blanco puro para visibilidad */
-    -webkit-text-fill-color: #ffffff !important; /* Fix para Safari/iOS */
-}
-[data-testid="stChatInput"] {
-    background-color: #141820 !important;
+    background: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* ── Buttons ── */
@@ -176,6 +173,10 @@ html, body, [class*="css"] {
     [data-testid="column"] {
         width: 100% !important;
         flex: 1 1 100% !important;
+    }
+    /* Fix para entrada de texto en móvil */
+    .stChatInputContainer, .stChatInput textarea, [data-testid="stChatInput"] {
+        background-color: #141820 !important;
     }
 }
 
@@ -305,10 +306,14 @@ Balance neto negativo = se llena. Balance neto positivo = se vacia.
 
 `df_eventos`: calendario de eventos en estadios con franjas de impacto.
 
-REGLAS DE DECISIÓN:
-- El estado actual (df_merged) es prioritario.
-- Los datos historicos justifican la recomendacion.
-- TIP DE PANDAS: usa siempre `.isin()` para comparar entre tablas.
+━━━━ REGLAS DE DECISIÓN (Jerarquía de Prioridades) ━━━━
+Cuando analices una situación o recomiendes un reparto, sigue ESTA prioridad estricta:
+1. ESTATUS ACTUAL: Lo que ocurre ahora en `df_merged` es la prioridad absoluta.
+2. DATOS HISTÓRICOS: Usa `df_historico` para validar si la tendencia (balance neto) apoya la elección.
+3. PROXIMIDAD: Busca siempre las estaciones más cercanas geográficamente.
+4. EQUILIBRIO: Reparte las unidades para que las estaciones receptoras queden con una ocupación equilibrada.
+
+TIP DE PANDAS: usa siempre `.isin()` para comparar entre tablas.
 
 ━━━━ INSTRUCCIONES CRÍTICAS ━━━━
 1. Responde SIEMPRE con un JSON válido y NADA MÁS. Sin texto antes ni después del JSON.
