@@ -369,6 +369,14 @@ REGLAS DE DECISIÓN:
 - Añade títulos descriptivos a los gráficos
 - Para rankings, filtra el top 10-15 para legibilidad
 - CRÍTICO: En el código Python usa SIEMPRE comillas simples para strings (ejemplo: df['columna']), NUNCA comillas dobles dentro del código, para no romper el JSON de respuesta.
+- NUNCA uses .iloc[0] directamente sin verificar antes que el DataFrame no está vacío.
+  Código correcto:
+  matches = df_merged[df_merged['name'].str.contains('Clark', case=False)]
+  if matches.empty:
+      resultado = 'No se encontró ninguna estación con ese nombre.'
+  else:
+      station = matches.iloc[0]
+      resultado = f"{station['name']}: {station['num_docks_available']} docks libres"
 
 ━━━━ CONTEXTO OPERATIVO ━━━━
 - Una estación con <20% de su capacidad en bicis está en riesgo de vaciarse.
