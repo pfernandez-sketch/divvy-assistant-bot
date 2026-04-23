@@ -376,7 +376,7 @@ REGLAS DE DECISIÓN:
       resultado = 'No se encontró ninguna estación con ese nombre.'
   else:
       station = matches.iloc[0]
-      resultado = f"{station['name']}: {station['num_docks_available']} docks libres"
+      resultado = f"{{station['name']}}: {{station['num_docks_available']}} docks libres"
 
 ━━━━ CONTEXTO OPERATIVO ━━━━
 - Una estación con <20% de su capacidad en bicis está en riesgo de vaciarse.
