@@ -31,33 +31,33 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 .stApp {
-    background: #f8f9fa;
-    color: #1a1f2e;
+    background: #0c0e14;
+    color: #e8eaf0;
 }
 
 /* ── Header bar ── */
 .divvy-header {
-    background: #ffffff;
+    background: linear-gradient(135deg, #141820 0%, #1a1f2e 100%);
     border-bottom: 2px solid #00bcd4;
     padding: 14px 32px;
     display: flex;
     align-items: center;
     gap: 16px;
     margin: -1rem -1rem 2rem -1rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 24px rgba(0,188,212,0.15);
 }
 .divvy-logo-text {
     font-size: 28px;
     font-weight: 800;
     letter-spacing: -1px;
-    color: #1a1f2e;
+    color: #ffffff;
 }
 .divvy-logo-text span {
     color: #00bcd4;
 }
 .divvy-subtitle {
     font-size: 13px;
-    color: #6c757d;
+    color: #8892a4;
     margin-top: 2px;
     font-weight: 400;
     letter-spacing: 0.3px;
@@ -75,27 +75,25 @@ html, body, [class*="css"] {
 
 /* ── Chat messages ── */
 .stChatMessage {
-    background: #ffffff !important;
-    border: 1px solid #e9ecef !important;
+    background: #141820 !important;
+    border: 1px solid #1e2535 !important;
     border-radius: 12px !important;
     margin-bottom: 12px !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.03) !important;
 }
 [data-testid="stChatMessageContent"] {
-    color: #1a1f2e !important;
-    font-size: 15px !important;
+    color: #e8eaf0 !important;
 }
 
-/* ── Chat input ── */
+/* ── Chat input (FIX PARA MÓVIL) ── */
 .stChatInputContainer {
-    background: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
+    background: #141820 !important;
+    border: 1px solid #00bcd4 !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
 }
 .stChatInput textarea {
     background: transparent !important;
-    color: #1a1f2e !important;
+    color: #ffffff !important; /* Forzamos blanco puro para visibilidad */
+    -webkit-text-fill-color: #ffffff !important; /* Fix para Safari/iOS */
 }
 
 /* ── Buttons ── */
@@ -107,7 +105,6 @@ html, body, [class*="css"] {
     font-weight: 600;
     padding: 10px 20px;
     transition: all 0.2s ease;
-    border: 1px solid rgba(0,0,0,0.05);
 }
 .stButton > button:hover {
     transform: translateY(-1px);
@@ -123,38 +120,39 @@ html, body, [class*="css"] {
     align-items: center !important;
     justify-content: center !important;
     line-height: 1.2 !important;
+    background: rgba(0, 188, 212, 0.1) !important;
+    border: 1px solid #00bcd4 !important;
 }
 
 /* ── Text input (password) ── */
 .stTextInput input {
-    background: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
+    background: #141820 !important;
+    border: 1px solid #1e2535 !important;
     border-radius: 10px !important;
-    color: #1a1f2e !important;
-    padding: 12px !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* ── Info boxes ── */
 .info-chip {
     display: inline-block;
-    background: rgba(0,188,212,0.1);
-    border: 1px solid rgba(0,188,212,0.2);
-    color: #008fa1;
+    background: rgba(0,188,212,0.12);
+    border: 1px solid rgba(0,188,212,0.3);
+    color: #00bcd4;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 4px 12px;
     border-radius: 20px;
-    margin: 4px 0;
 }
 .section-title {
     font-size: 22px;
-    font-weight: 800;
-    color: #1a1f2e;
+    font-weight: 700;
+    color: #ffffff;
     margin-bottom: 6px;
 }
 .section-sub {
     font-size: 14px;
-    color: #6c757d;
+    color: #8892a4;
     margin-bottom: 24px;
 }
 
@@ -164,16 +162,13 @@ html, body, [class*="css"] {
         padding: 12px 20px;
     }
     .divvy-logo-text {
-        font-size: 22px;
+        font-size: 24px;
     }
     .divvy-badge {
         display: none;
     }
     .section-title {
         font-size: 18px;
-    }
-    .stChatMessage {
-        padding: 12px !important;
     }
     [data-testid="column"] {
         width: 100% !important;
@@ -183,18 +178,18 @@ html, body, [class*="css"] {
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #f8f9fa; }
-::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #0c0e14; }
+::-webkit-scrollbar-thumb { background: #00bcd4; border-radius: 3px; }
 
 /* ── Login screen ── */
 .login-container {
     max-width: 420px;
     margin: 5vh auto;
-    background: #ffffff;
-    border: 1px solid #e9ecef;
+    background: #141820;
+    border: 1px solid #1e2535;
     border-radius: 24px;
     padding: 40px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 </style>
 """
