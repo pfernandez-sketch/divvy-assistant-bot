@@ -859,7 +859,7 @@ if "pending_question" not in st.session_state:
 suggested = [
     "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
     "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
-    "Hoy hay partido en Soldier Field, ¿qué estaciones evito y cuáles priorizo?",
+    "Tengo 12 bicis en el camión. ¿Dónde las puedo dejar cerca de Millennium Park?",
 ]
 cols_chips = st.columns(len(suggested))
 for i, q in enumerate(suggested):
