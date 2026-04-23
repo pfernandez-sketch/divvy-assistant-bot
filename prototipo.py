@@ -287,7 +287,7 @@ Columnas de estado actual (de statios_status):
   ref_lat, ref_lon = 41.8827, -87.6226
   df_merged['dist_temp'] = np.sqrt((df_merged['lat'] - ref_lat)**2 + (df_merged['lon'] - ref_lon)**2)
   closest = df_merged.loc[df_merged['dist_temp'].idxmin()]
-  resultado = f"{closest['name']} ({closest['short_name']})"
+  resultado = f"{{closest['name']}} ({{closest['short_name']}})"
 
 ━━━━ DATOS HISTORICOS PARA APOYO A DECISIONES (Contexto Operativo) ━━━━
 Tienes tres DataFrames adicionales que sirven de COMPLEMENTO al estado real de df_merged.
@@ -330,7 +330,7 @@ REGLAS DE DECISIÓN:
       resultado = 'No se encontró ninguna estación con ese nombre.'
   else:
       station = matches.iloc[0]
-      resultado = f"{station['name']}: {station['num_docks_available']} docks libres"
+      resultado = f"{{station['name']}}: {{station['num_docks_available']}} docks libres"
 
 ━━━━ BÚSQUEDA ROBUSTA DE ESTACIONES (CRÍTICO) ━━━━
 Los operativos escriben en el teléfono con errores de capitalización y nombres parciales.
@@ -395,10 +395,6 @@ A continuación tienes ejemplos reales de preguntas y cómo deberías responderl
 # =============================================================================
 # 5. MOTOR DE DATOS (Carga y Procesamiento)
 # =============================================================================
-@st.cache_data
-def load_data():
-    """Carga, limpia y resamplea el dataset temporal con el maestro de estaciones."""
-
 def clean_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Normaliza nombres de columnas: minúsculas, sin tildes, snake_case ASCII."""
     def clean_name(name):
