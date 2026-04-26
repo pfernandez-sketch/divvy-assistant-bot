@@ -98,17 +98,20 @@ html, body, [class*="css"] {
 
 /* ── Buttons ── */
 .stButton > button {
-    background: linear-gradient(135deg, #00bcd4, #0097a7);
-    color: white;
-    border: none;
-    border-radius: 10px;
+    background: #141820;
+    color: #e8eaf0;
+    border: 1px solid #1e2535;
+    border-radius: 16px;
     font-weight: 600;
     padding: 10px 20px;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 .stButton > button:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(0,188,212,0.3);
+    background: rgba(0, 188, 212, 0.15) !important;
+    border-color: #00bcd4 !important;
+    color: #ffffff !important;
 }
 
 /* ── Suggested Chips (Mobile) ── */
@@ -259,6 +262,13 @@ html, body, [class*="css"] {
     border: 1px solid #1e2535;
     border-radius: 16px;
     padding: 24px;
+}
+/* Botón de acción principal */
+div[data-testid="stButton"] button[kind="primary"],
+.stButton > button[data-testid="baseButton-secondary"]:last-of-type {
+    background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
+    color: white !important;
+    border: none !important;
 }
 </style>
 """
