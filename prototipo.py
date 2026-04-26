@@ -910,15 +910,6 @@ if not st.session_state.authenticated:
 
         # ── Formulario según rol seleccionado ──
         if role == "operario":
-            st.markdown("""
-            <div style="
-                background: #141820;
-                border: 1px solid #1e2535;
-                border-radius: 16px;
-                padding: 24px;
-                animation: fadeSlideUp 0.3s ease both;
-            ">
-            """, unsafe_allow_html=True)
             pwd = st.text_input("", type="password", placeholder="🔐 Contraseña de acceso")
             if st.button("Entrar al Asistente →", use_container_width=True, key="btn_entrar"):
                 if pwd == st.secrets["PASSWORD"]:
@@ -927,7 +918,6 @@ if not st.session_state.authenticated:
                     st.rerun()
                 else:
                     st.error("❌ Contraseña incorrecta.")
-            st.markdown("</div>", unsafe_allow_html=True)
 
         elif role == "analisis":
             st.markdown("""
@@ -1103,8 +1093,8 @@ if not st.session_state.messages:
             Asistente de Rebalanceo Divvy
         </div>
         <div style="font-size:14px; color:#8892a4; max-width:420px; margin:0 auto; line-height:1.6;">
-            Pregúntame dónde dejar o recoger bicis, qué estaciones están críticas,
-            o cómo optimizar tu ruta de hoy.
+            Pregúntame dónde dejar o recoger bicis, qué estaciones están en estado crítico,
+            o cuáles necesitan reposición urgente.
         </div>
     </div>
     """, unsafe_allow_html=True)
