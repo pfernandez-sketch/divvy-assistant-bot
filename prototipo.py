@@ -206,7 +206,7 @@ st.markdown(DIVVY_CSS, unsafe_allow_html=True)
 MODEL_NAME = "gpt-4.1-mini"
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-CAPACITY_FILE = os.path.join(DATA_DIR, "statios_capacity_updated.xlsx")
+CAPACITY_FILE = os.path.join(DATA_DIR, "Statios_Capacity_17_48_3_20_2026.xlsx")
 STATUS_FILE   = os.path.join(DATA_DIR, "dataset_final (1).csv")
 INFO_FILE     = os.path.join(DATA_DIR, "infostations.xlsx")
 
@@ -262,7 +262,7 @@ Tienes acceso a un DataFrame de pandas llamado `df_merged` con información en t
 
 ━━━━ COLUMNAS DISPONIBLES EN `df_merged` ━━━━
 
-Columnas de capacidad (de statios_capacity_updated):
+Columnas de capacidad (de Statios_Capacity):
   - station_id       : str — identificador único UUID de la estación
   - name             : str — nombre completo de la estación (ej: {name_example})
   - short_name       : str — código corto (ej: CHI00384)
