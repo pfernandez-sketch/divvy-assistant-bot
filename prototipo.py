@@ -883,7 +883,7 @@ if st.session_state.chip_fired and st.session_state.pending_question:
     with st.chat_message("assistant"):
         with st.spinner("🔍 Analizando datos..."):
             try:
-                raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages)
+                raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages[:-1])
                 parsed = parse_response(raw)
                 tipo   = parsed.get("tipo", "")
                 codigo = parsed.get("codigo", "")
@@ -950,7 +950,7 @@ if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctrica
     with st.chat_message("assistant"):
         with st.spinner("🔍 Analizando datos..."):
             try:
-                raw = get_openai_response(user_input, system_prompt, st.session_state.messages)
+                raw = get_openai_response(user_input, system_prompt, st.session_state.messages[:-1])
                 parsed = parse_response(raw)
                 tipo   = parsed.get("tipo", "")
                 codigo = parsed.get("codigo", "")
