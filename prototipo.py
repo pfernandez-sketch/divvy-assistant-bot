@@ -187,13 +187,38 @@ html, body, [class*="css"] {
 
 /* ── Login screen ── */
 .login-container {
-    max-width: 420px;
-    margin: 5vh auto;
+    max-width: 440px;
+    margin: 8vh auto;
+    text-align: center;
+}
+.login-logo-img {
+    width: 160px;
+    margin: 0 auto 8px auto;
+    display: block;
+}
+.login-tagline {
+    font-size: 13px;
+    color: #8892a4;
+    margin-bottom: 32px;
+    letter-spacing: 0.3px;
+}
+.login-card {
     background: #141820;
     border: 1px solid #1e2535;
-    border-radius: 24px;
-    padding: 40px;
+    border-radius: 20px;
+    padding: 36px 32px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.login-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+.login-sub {
+    font-size: 13px;
+    color: #8892a4;
+    margin-bottom: 24px;
 }
 </style>
 """
@@ -791,14 +816,30 @@ if "authenticated" not in st.session_state:
 if not st.session_state.authenticated:
     st.markdown("""
     <div class="login-container">
-        <div class="login-logo">DIV<span>VY</span></div>
-        <div class="login-tagline">Analytics Dashboard - Chicago</div>
+        <svg class="login-logo-img" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- D -->
+          <text x="0" y="95" font-family="Inter,Arial,sans-serif" font-weight="900" 
+                font-size="110" fill="#ffffff" letter-spacing="-4">DI</text>
+          <!-- VV chevrons -->
+          <polyline points="155,20 178,65 200,20" fill="none" stroke="#00bcd4" stroke-width="18" 
+                    stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="155,50 178,95 200,50" fill="none" stroke="#00bcd4" stroke-width="18" 
+                    stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Y -->
+          <text x="205" y="95" font-family="Inter,Arial,sans-serif" font-weight="900" 
+                font-size="110" fill="#ffffff" letter-spacing="-4">Y</text>
+        </svg>
+        <div class="login-tagline">Rebalancing Operations · Chicago, IL</div>
+        <div class="login-card">
+            <div class="login-title">Acceso Operativo</div>
+            <div class="login-sub">Introduce tu contraseña para continuar</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 1.2, 1])
+    col1, col2, col3 = st.columns([1, 1.4, 1])
     with col2:
-        pwd = st.text_input("Contraseña de acceso", type="password", placeholder="••••••••••")
+        pwd = st.text_input("", type="password", placeholder="Contraseña de acceso")
         if st.button("Entrar →", use_container_width=True):
             if pwd == st.secrets["PASSWORD"]:
                 st.session_state.authenticated = True
