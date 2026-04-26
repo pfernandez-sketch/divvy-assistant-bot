@@ -738,6 +738,7 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
     # Limpiar imports del código generado para evitar conflictos
     code = re.sub(r'^\s*import\s+\w+\s*$', '', code, flags=re.MULTILINE)
     code = re.sub(r'^\s*from\s+\w+\s+import\s+.*$', '', code, flags=re.MULTILINE)
+    code = re.sub(r'\\\s*\n', '\n', code)
 
     def haversine(lat1, lon1, lat2, lon2):
         """Función auxiliar para calcular distancias entre coordenadas GPS."""
