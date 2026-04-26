@@ -813,13 +813,24 @@ if not st.session_state.authenticated:
 # =============================================================================
 
 # ── Header ──
-st.markdown("""
+slot_emoji = {"Madrugada": "🌙", "Mañana": "🌅", "Tarde": "☀️", "Noche": "🌆"}
+current_slot = get_time_slot(current_dt)
+emoji = slot_emoji.get(current_slot, "⏱️")
+dt_str = pd.to_datetime(current_dt).strftime("%a %d/%m · %H:%M") if current_dt else "N/A"
+
+st.markdown(f"""
 <div class="divvy-header">
     <div>
         <div class="divvy-logo-text">DIV<span>VY</span></div>
         <div class="divvy-subtitle">Analytics Dashboard - Chicago, IL</div>
     </div>
-    <div class="divvy-badge">LIVE DATA</div>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+        <div style="text-align:right;">
+            <div style="font-size:11px; color:#8892a4;">Último snapshot</div>
+            <div style="font-size:13px; color:#00bcd4; font-weight:600;">{emoji} {dt_str} · {current_slot}</div>
+        </div>
+        <div class="divvy-badge">LIVE DATA</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -883,7 +894,12 @@ if st.session_state.chip_fired and st.session_state.pending_question:
     st.session_state.messages.append({"role": "user", "content": user_input_chip})
 
     with st.chat_message("assistant"):
-        with st.spinner("🔍 Analizando datos..."):
+        status_placeholder = st.empty()
+        status_placeholder.markdown(
+            "<div style='color:#00bcd4; font-size:13px; padding:4px 0;'>⏳ Analizando datos en tiempo real...</div>",
+            unsafe_allow_html=True
+        )
+        with st.spinner("Consultando estaciones..."):
             try:
                 raw = get_openai_response(user_input_chip, system_prompt, st.session_state.messages[:-1])
                 parsed = parse_response(raw)
@@ -921,10 +937,25 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
                     })
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
+        status_placeholder.empty()
     
     st.rerun()
 
 # ── Renderizar historial ──
+if not st.session_state.messages:
+    st.markdown("""
+    <div style="text-align:center; padding: 48px 20px 32px 20px;">
+        <div style="font-size:52px; margin-bottom:16px;">🚲</div>
+        <div style="font-size:20px; font-weight:700; color:#ffffff; margin-bottom:8px;">
+            Asistente de Rebalanceo Divvy
+        </div>
+        <div style="font-size:14px; color:#8892a4; max-width:420px; margin:0 auto; line-height:1.6;">
+            Pregúntame dónde dejar o recoger bicis, qué estaciones están críticas,
+            o cómo optimizar tu ruta de hoy.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         if msg.get("fig"):
@@ -945,12 +976,17 @@ for msg in st.session_state.messages:
                 st.text(msg["raw_debug"])
 
 # Input del usuario
-if user_input := st.chat_input("Ej: ¿Qué estación tiene más bicis eléctricas disponibles?"):
+if user_input := st.chat_input("¿Dónde dejo las bicis? ¿Qué estación necesita reposición?"):
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # Generar respuesta
     with st.chat_message("assistant"):
-        with st.spinner("🔍 Analizando datos..."):
+        status_placeholder = st.empty()
+        status_placeholder.markdown(
+            "<div style='color:#00bcd4; font-size:13px; padding:4px 0;'>⏳ Analizando datos en tiempo real...</div>",
+            unsafe_allow_html=True
+        )
+        with st.spinner("Consultando estaciones..."):
             try:
                 raw = get_openai_response(user_input, system_prompt, st.session_state.messages[:-1])
                 parsed = parse_response(raw)
@@ -988,6 +1024,7 @@ NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 do
                     })
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
+        status_placeholder.empty()
     
     st.rerun()
 
