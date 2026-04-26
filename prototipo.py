@@ -360,6 +360,7 @@ Cuando analices una situación o recomiendes un reparto, sigue ESTA prioridad es
 - Añade títulos descriptivos a los gráficos
 - Para rankings, filtra el top 10-15 para legibilidad
 - CRÍTICO: En el código Python usa SIEMPRE comillas simples para strings (ejemplo: df['columna']), NUNCA comillas dobles dentro del código, para no romper el JSON de respuesta.
+- CRÍTICO: Cuando el usuario mencione "Millennium Park", "Navy Pier", "Soldier Field" u otro punto de referencia de Chicago, NUNCA asumas que es el nombre exacto de una estación. SIEMPRE usa el patrón de coordenadas de referencia para encontrar la estación más cercana a ese punto, y luego busca estaciones cercanas usando df_distances. NUNCA hagas solo str.contains() con el nombre del lugar como único método de búsqueda.
 - NUNCA uses .iloc[0] directamente sin verificar antes que el DataFrame no está vacío.
   Código correcto:
   matches = df_merged[df_merged['name'].str.contains('Clark', case=False)]
