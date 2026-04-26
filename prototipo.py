@@ -812,7 +812,27 @@ if not st.session_state.authenticated:
 # 9. INTERFAZ DE USUARIO PRINCIPAL (Layout y Simulación)
 # =============================================================================
 
-# ── Header ──
+
+# ── Cargar datos ──
+with st.spinner("Sincronizando estaciones..."):
+    df_all, df_distances, df_historico, df_clima, df_eventos = load_data()
+    unique_times = sorted(df_all["time_bucket"].unique())
+
+# ── Obtener el estado de las estaciones (último snapshot disponible) ──
+df_merged = pd.DataFrame()
+current_dt = None
+
+if unique_times:
+    current_dt = unique_times[-1]
+    for dt in reversed(unique_times):
+        df_merged = df_all[df_all["time_bucket"] == dt].copy()
+        if not df_merged.empty:
+            current_dt = dt
+            break
+else:
+    st.warning("⚠️ No se han encontrado datos históricos en los archivos proporcionados.")
+
+# ── Header (Renderizado después de obtener current_dt) ──
 slot_emoji = {"Madrugada": "🌙", "Mañana": "🌅", "Tarde": "☀️", "Noche": "🌆"}
 current_slot = get_time_slot(current_dt)
 emoji = slot_emoji.get(current_slot, "⏱️")
@@ -833,25 +853,6 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# ── Cargar datos ──
-with st.spinner("Sincronizando estaciones..."):
-    df_all, df_distances, df_historico, df_clima, df_eventos = load_data()
-    unique_times = sorted(df_all["time_bucket"].unique())
-
-# ── Obtener el estado de las estaciones (último snapshot disponible) ──
-df_merged = pd.DataFrame()
-current_dt = None
-
-if unique_times:
-    current_dt = unique_times[-1]
-    for dt in reversed(unique_times):
-        df_merged = df_all[df_all["time_bucket"] == dt].copy()
-        if not df_merged.empty:
-            current_dt = dt
-            break
-else:
-    st.warning("⚠️ No se han encontrado datos históricos en los archivos proporcionados.")
 
 
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
