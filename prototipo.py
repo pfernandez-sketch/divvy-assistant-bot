@@ -233,9 +233,10 @@ html, body, [class*="css"] {
     background: rgba(0,188,212,0.06);
 }
 .role-card.selected {
-    border-color: #00bcd4;
-    background: rgba(0,188,212,0.1);
-    transform: scale(1.03);
+    border-color: #00bcd4 !important;
+    background: rgba(0,188,212,0.12) !important;
+    transform: scale(1.04) !important;
+    box-shadow: 0 8px 32px rgba(0,188,212,0.25) !important;
 }
 .role-icon {
     font-size: 36px;
@@ -856,58 +857,93 @@ if not st.session_state.authenticated:
     if "login_role" not in st.session_state:
         st.session_state.login_role = None
 
+    role = st.session_state.login_role
+
     st.markdown("""
     <div class="login-wrapper">
         <div class="login-brand">DIV<span>VY</span></div>
         <div class="login-tagline">Operations Intelligence Platform · Chicago, IL</div>
-        <div class="role-grid">
-            <div class="role-card" id="card-operario">
-                <div class="role-icon">🚛</div>
-                <div class="role-title">Operario de Campo</div>
-                <div class="role-desc">Accede al asistente de rebalanceo en tiempo real</div>
-            </div>
-            <div class="role-card" id="card-analisis">
-                <div class="role-icon">📊</div>
-                <div class="role-title">Equipo de Análisis</div>
-                <div class="role-desc">Panel de métricas y datos históricos del sistema</div>
-            </div>
-        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 1.4, 1])
+    col1, col2, col3 = st.columns([1, 2.4, 1])
     with col2:
-        role = st.radio(
-            "Selecciona tu perfil:",
-            ["🚛 Operario de Campo", "📊 Equipo de Análisis"],
-            horizontal=True,
-            label_visibility="collapsed"
-        )
+        # ── Cards de selección de rol ──
+        c1, c2 = st.columns(2)
+        with c1:
+            operario_selected = "selected" if role == "operario" else ""
+            if st.button("🚛\n\n**Operario de Campo**\n\nAccede al asistente de rebalanceo en tiempo real",
+                        key="btn_operario",
+                        use_container_width=True):
+                st.session_state.login_role = "operario"
+                st.rerun()
+            st.markdown(f"""
+            <style>
+            div[data-testid="stButton"] button[kind="secondary"]:first-of-type {{
+                min-height: 140px;
+                border-radius: 20px;
+                font-size: 13px;
+                line-height: 1.5;
+                {'border: 1px solid #00bcd4 !important; background: rgba(0,188,212,0.12) !important;' if role == 'operario' else ''}
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+
+        with c2:
+            if st.button("📊\n\n**Equipo de Análisis**\n\nPanel de métricas y datos históricos del sistema",
+                        key="btn_analisis",
+                        use_container_width=True):
+                st.session_state.login_role = "analisis"
+                st.rerun()
+
         st.markdown("<br>", unsafe_allow_html=True)
 
-        if "Operario" in role:
+        # ── Formulario según rol seleccionado ──
+        if role == "operario":
+            st.markdown("""
+            <div style="
+                background: #141820;
+                border: 1px solid #1e2535;
+                border-radius: 16px;
+                padding: 24px;
+                animation: fadeSlideUp 0.3s ease both;
+            ">
+            """, unsafe_allow_html=True)
             pwd = st.text_input("", type="password", placeholder="🔐 Contraseña de acceso")
-            if st.button("Entrar al Asistente →", use_container_width=True):
+            if st.button("Entrar al Asistente →", use_container_width=True, key="btn_entrar"):
                 if pwd == st.secrets["PASSWORD"]:
                     st.session_state.authenticated = True
                     st.session_state.user_role = "operario"
                     st.rerun()
                 else:
                     st.error("❌ Contraseña incorrecta.")
-        else:
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        elif role == "analisis":
             st.markdown("""
             <div style="
                 background: rgba(0,188,212,0.06);
                 border: 1px solid rgba(0,188,212,0.2);
-                border-radius: 12px;
-                padding: 20px;
-                color: #8892a4;
-                font-size: 14px;
+                border-radius: 16px;
+                padding: 28px 24px;
                 text-align: center;
-                line-height: 1.6;
+                animation: fadeSlideUp 0.3s ease both;
             ">
-                🔒 El acceso al panel de análisis estará disponible próximamente.<br>
-                <span style="color:#00bcd4; font-size:12px;">Contacta con tu supervisor para más información.</span>
+                <div style="font-size:28px; margin-bottom:12px;">🔒</div>
+                <div style="color:#ffffff; font-weight:600; font-size:15px; margin-bottom:8px;">
+                    Acceso restringido
+                </div>
+                <div style="color:#8892a4; font-size:13px; line-height:1.6;">
+                    El panel de análisis estará disponible próximamente.<br>
+                    <span style="color:#00bcd4;">Contacta con tu supervisor para más información.</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        else:
+            st.markdown("""
+            <div style="text-align:center; color:#8892a4; font-size:13px; padding:16px;">
+                ↑ Selecciona tu perfil para continuar
             </div>
             """, unsafe_allow_html=True)
 
