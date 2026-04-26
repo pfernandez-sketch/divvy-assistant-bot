@@ -185,40 +185,79 @@ html, body, [class*="css"] {
 ::-webkit-scrollbar-track { background: #0c0e14; }
 ::-webkit-scrollbar-thumb { background: #00bcd4; border-radius: 3px; }
 
-/* ── Login screen ── */
-.login-container {
-    max-width: 440px;
-    margin: 8vh auto;
+/* ── Login animado ── */
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.login-wrapper {
+    max-width: 560px;
+    margin: 10vh auto;
     text-align: center;
 }
-.login-logo-img {
-    width: 160px;
-    margin: 0 auto 8px auto;
-    display: block;
+.login-brand {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    color: #ffffff;
+    margin-bottom: 4px;
+    animation: fadeSlideUp 0.5s ease both;
 }
+.login-brand span { color: #00bcd4; }
 .login-tagline {
     font-size: 13px;
     color: #8892a4;
-    margin-bottom: 32px;
-    letter-spacing: 0.3px;
+    margin-bottom: 40px;
+    animation: fadeSlideUp 0.5s ease 0.1s both;
 }
-.login-card {
+.role-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+    animation: fadeSlideUp 0.5s ease 0.2s both;
+}
+.role-card {
     background: #141820;
     border: 1px solid #1e2535;
     border-radius: 20px;
-    padding: 36px 32px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    padding: 32px 24px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
 }
-.login-title {
-    font-size: 18px;
+.role-card:hover {
+    transform: scale(1.05);
+    border-color: #00bcd4;
+    box-shadow: 0 8px 32px rgba(0,188,212,0.2);
+    background: rgba(0,188,212,0.06);
+}
+.role-card.selected {
+    border-color: #00bcd4;
+    background: rgba(0,188,212,0.1);
+    transform: scale(1.03);
+}
+.role-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+.role-title {
+    font-size: 16px;
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
-.login-sub {
-    font-size: 13px;
+.role-desc {
+    font-size: 12px;
     color: #8892a4;
-    margin-bottom: 24px;
+    line-height: 1.5;
+}
+.login-form-area {
+    animation: fadeSlideUp 0.4s ease both;
+    background: #141820;
+    border: 1px solid #1e2535;
+    border-radius: 16px;
+    padding: 24px;
 }
 </style>
 """
@@ -814,38 +853,64 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
+    if "login_role" not in st.session_state:
+        st.session_state.login_role = None
+
     st.markdown("""
-    <div class="login-container">
-        <svg class="login-logo-img" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
-          <!-- D -->
-          <text x="0" y="95" font-family="Inter,Arial,sans-serif" font-weight="900" 
-                font-size="110" fill="#ffffff" letter-spacing="-4">DI</text>
-          <!-- VV chevrons -->
-          <polyline points="155,20 178,65 200,20" fill="none" stroke="#00bcd4" stroke-width="18" 
-                    stroke-linecap="round" stroke-linejoin="round"/>
-          <polyline points="155,50 178,95 200,50" fill="none" stroke="#00bcd4" stroke-width="18" 
-                    stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Y -->
-          <text x="205" y="95" font-family="Inter,Arial,sans-serif" font-weight="900" 
-                font-size="110" fill="#ffffff" letter-spacing="-4">Y</text>
-        </svg>
-        <div class="login-tagline">Rebalancing Operations · Chicago, IL</div>
-        <div class="login-card">
-            <div class="login-title">Acceso Operativo</div>
-            <div class="login-sub">Introduce tu contraseña para continuar</div>
+    <div class="login-wrapper">
+        <div class="login-brand">DIV<span>VY</span></div>
+        <div class="login-tagline">Operations Intelligence Platform · Chicago, IL</div>
+        <div class="role-grid">
+            <div class="role-card" id="card-operario">
+                <div class="role-icon">🚛</div>
+                <div class="role-title">Operario de Campo</div>
+                <div class="role-desc">Accede al asistente de rebalanceo en tiempo real</div>
+            </div>
+            <div class="role-card" id="card-analisis">
+                <div class="role-icon">📊</div>
+                <div class="role-title">Equipo de Análisis</div>
+                <div class="role-desc">Panel de métricas y datos históricos del sistema</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 1.4, 1])
     with col2:
-        pwd = st.text_input("", type="password", placeholder="Contraseña de acceso")
-        if st.button("Entrar →", use_container_width=True):
-            if pwd == st.secrets["PASSWORD"]:
-                st.session_state.authenticated = True
-                st.rerun()
-            else:
-                st.error("❌ Contraseña incorrecta. Inténtalo de nuevo.")
+        role = st.radio(
+            "Selecciona tu perfil:",
+            ["🚛 Operario de Campo", "📊 Equipo de Análisis"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if "Operario" in role:
+            pwd = st.text_input("", type="password", placeholder="🔐 Contraseña de acceso")
+            if st.button("Entrar al Asistente →", use_container_width=True):
+                if pwd == st.secrets["PASSWORD"]:
+                    st.session_state.authenticated = True
+                    st.session_state.user_role = "operario"
+                    st.rerun()
+                else:
+                    st.error("❌ Contraseña incorrecta.")
+        else:
+            st.markdown("""
+            <div style="
+                background: rgba(0,188,212,0.06);
+                border: 1px solid rgba(0,188,212,0.2);
+                border-radius: 12px;
+                padding: 20px;
+                color: #8892a4;
+                font-size: 14px;
+                text-align: center;
+                line-height: 1.6;
+            ">
+                🔒 El acceso al panel de análisis estará disponible próximamente.<br>
+                <span style="color:#00bcd4; font-size:12px;">Contacta con tu supervisor para más información.</span>
+            </div>
+            """, unsafe_allow_html=True)
+
     st.stop()
 
 
