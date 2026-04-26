@@ -98,18 +98,18 @@ html, body, [class*="css"] {
 
 /* ── Buttons ── */
 .stButton > button {
-    background: #141820;
+    background: linear-gradient(135deg, rgba(0,188,212,0.12), rgba(0,151,167,0.08));
     color: #e8eaf0;
-    border: 1px solid #1e2535;
+    border: 1px solid rgba(0,188,212,0.25);
     border-radius: 16px;
-    font-weight: 600;
+    font-weight: 500;
     padding: 10px 20px;
     transition: all 0.25s ease;
 }
 .stButton > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0,188,212,0.3);
-    background: rgba(0, 188, 212, 0.15) !important;
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0,188,212,0.25);
+    background: linear-gradient(135deg, rgba(0,188,212,0.22), rgba(0,151,167,0.16)) !important;
     border-color: #00bcd4 !important;
     color: #ffffff !important;
 }
