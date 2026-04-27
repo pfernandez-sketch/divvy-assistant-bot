@@ -270,48 +270,6 @@ div[data-testid="stButton"] button[kind="primary"],
     color: white !important;
     border: none !important;
 }
-/* ── Burbujas estilo WhatsApp ── */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
-    background: rgba(0, 188, 212, 0.1) !important;
-    border: 1px solid rgba(0, 188, 212, 0.25) !important;
-    border-radius: 18px 18px 4px 18px !important;
-    margin-left: 15% !important;
-    margin-right: 0 !important;
-}
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
-    background: #141820 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 18px 18px 18px 4px !important;
-    margin-right: 15% !important;
-    margin-left: 0 !important;
-}
-/* Ocultar avatares para look más limpio */
-[data-testid="stChatMessageAvatarUser"],
-[data-testid="stChatMessageAvatarAssistant"] {
-    display: none !important;
-}
-/* Alinear texto usuario a la derecha */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) 
-[data-testid="stChatMessageContent"] {
-    text-align: right !important;
-    color: #ffffff !important;
-}
-/* Color especial para mensajes usuario */
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) 
-[data-testid="stChatMessageContent"] p {
-    color: #e8f8fb !important;
-    font-weight: 500 !important;
-}
-
-/* ── Semáforo operativo en cajas de resultado ── */
-[data-testid="stInfo"] {
-    background: rgba(0, 188, 212, 0.08) !important;
-    border-left: 4px solid #00bcd4 !important;
-    border-radius: 12px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    color: #e8eaf0 !important;
-}
 </style>
 """
 
@@ -1041,50 +999,6 @@ st.markdown(f"""
 
 # ── Generar Prompt Dinámico (Contexto temporal para LLM) ──
 system_prompt = build_system_prompt(df_merged, current_dt)
-
-# ── KPIs operativos rápidos ──
-if not df_merged.empty:
-    total_criticas_llenas = int((df_merged["occupancy_pct"] > 85).sum())
-    total_criticas_vacias = int((df_merged["occupancy_pct"] < 15).sum())
-    total_bikes = int(df_merged["num_bikes_available"].sum())
-    total_ebikes = int(df_merged["num_ebikes_available"].sum())
-
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.markdown(f"""
-        <div style="background:#141820; border:1px solid #1e2535; border-left: 3px solid #00bcd4;
-                    border-radius:12px; padding:14px 16px;">
-            <div style="font-size:11px; color:#8892a4; text-transform:uppercase; letter-spacing:0.5px;">Estaciones activas</div>
-            <div style="font-size:24px; font-weight:700; color:#00bcd4;">{len(df_merged)}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with k2:
-        st.markdown(f"""
-        <div style="background:#141820; border:1px solid #1e2535; border-left: 3px solid #f44336;
-                    border-radius:12px; padding:14px 16px;">
-            <div style="font-size:11px; color:#8892a4; text-transform:uppercase; letter-spacing:0.5px;">🔴 Críticas llenas</div>
-            <div style="font-size:24px; font-weight:700; color:#f44336;">{total_criticas_llenas}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with k3:
-        st.markdown(f"""
-        <div style="background:#141820; border:1px solid #1e2535; border-left: 3px solid #ff9800;
-                    border-radius:12px; padding:14px 16px;">
-            <div style="font-size:11px; color:#8892a4; text-transform:uppercase; letter-spacing:0.5px;">🟡 Críticas vacías</div>
-            <div style="font-size:24px; font-weight:700; color:#ff9800;">{total_criticas_vacias}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with k4:
-        st.markdown(f"""
-        <div style="background:#141820; border:1px solid #1e2535; border-left: 3px solid #4caf50;
-                    border-radius:12px; padding:14px 16px;">
-            <div style="font-size:11px; color:#8892a4; text-transform:uppercase; letter-spacing:0.5px;">⚡ E-Bikes disp.</div>
-            <div style="font-size:24px; font-weight:700; color:#4caf50;">{total_ebikes}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-
 
 
 # =============================================================================
