@@ -278,7 +278,7 @@ st.markdown(DIVVY_CSS, unsafe_allow_html=True)
 # =============================================================================
 # 3. CONSTANTES Y RUTAS DE ARCHIVOS
 # =============================================================================
-MODEL_NAME = "gpt-4.1-mini"
+MODEL_NAME = "gpt-4.1"
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 CAPACITY_FILE = os.path.join(DATA_DIR, "Statios_Capacity_17_48_3_20_2026.xlsx")
