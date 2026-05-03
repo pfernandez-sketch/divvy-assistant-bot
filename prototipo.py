@@ -308,6 +308,8 @@ TEST_CASES_CONTEXT = load_test_cases()
 # =============================================================================
 # 4. CONFIGURACIÓN DEL ASISTENTE (System Prompt)
 # =============================================================================
+
+SYSTEM_PROMPT_TEMPLATE = """
 # SYSTEM PROMPT — Asistente Operativo Divvy Chicago
 
 Eres un asistente analítico experto en operaciones de Divvy, el sistema de bicicletas compartidas de Chicago operado por Lyft.
@@ -597,14 +599,7 @@ Para cada respuesta, sigue este esquema:
 - Si la pregunta es ambigua, pregunta primero: *"¿En qué estación estás ahora?"* o *"¿Necesitas dejar o recoger bicis?"*
 - Cuando el operativo dice cuántas bicis tiene, verifica que **TODAS** las estaciones recomendadas tengan suficientes docks para absorber esa cantidad. Si ninguna sola puede, sugiere un reparto explícito con cantidades concretas que sumen el total.
 
----
-
-## Ejemplos de Respuestas Ideales
-
-A continuación tienes ejemplos reales de preguntas y cómo deberías responderlas. Úsalos como referencia de formato, tono y nivel de detalle esperado:
-
-{test_cases}
-
+"""
 
 # =============================================================================
 # 5. MOTOR DE DATOS (Carga y Procesamiento)
@@ -750,7 +745,6 @@ def build_system_prompt(df_merged: pd.DataFrame, dt: datetime.datetime = None) -
         "cap_min": 0, "cap_max": 0, "total_stations": 0, "total_capacity": 0,
         "total_bikes": 0, "total_ebikes": 0, "occ_min": 0.0, "occ_max": 0.0,
         "high_occ_count": 0, "low_occ_count": 0,
-        "test_cases": TEST_CASES_CONTEXT,
         "current_dt": dt.strftime("%Y-%m-%d %H:%M:%S") if dt else "N/A",
         "current_slot": get_time_slot(dt)
     }
@@ -1226,7 +1220,11 @@ El código generó este resultado: {resultado_str}
 Basándote ÚNICAMENTE en este resultado real, escribe una interpretación operativa en máximo 2 frases.
 NO uses {{}}, NO contradigas el resultado. Si el resultado dice 6 docks, di 6 docks."""
 
-                    interp = get_openai_response(interp_prompt, "Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.")
+                    INTERP_SYSTEM = f"""Eres un asistente operativo de Divvy. Responde solo con la interpretación, sin JSON.
+Aquí tienes ejemplos del tono y formato esperado:
+{TEST_CASES_CONTEXT}"""
+
+interp = get_openai_response(interp_prompt, INTERP_SYSTEM)
 
                     st.session_state.messages.append({
                         "role"      : "assistant",
