@@ -3,5 +3,5 @@ pandas
 numpy
 plotly
 openai==1.30.0
-supabase==2.7.0
+supabase==2.5.0
 openpyxl
