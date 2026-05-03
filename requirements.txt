@@ -4,3 +4,4 @@ numpy
 plotly
 openai
 openpyxl
+supabase==2.3.0
