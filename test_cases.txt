@@ -1,0 +1,103 @@
+================================================================================
+EJEMPLOS DE PREGUNTAS Y RESPUESTAS IDEALES — DIVVY ASSISTANT BOT
+================================================================================
+
+REGLAS GENERALES QUE APLICAN A TODAS LAS RESPUESTAS:
+- Siempre incluir: docks libres + capacidad total + % de ocupación
+- Umbral de urgencia: <15% de bicis disponibles = estación en riesgo
+- Siempre ofrecer mínimo 2 opciones de estaciones
+- Siempre incluir distancia cuando se pregunta por estaciones cercanas
+- Scooters y patinetes eléctricos no están en el alcance del asistente
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 1
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: ¿Cómo está la estación Millennium Park?
+
+Respuesta ideal:
+  La estación Millennium Park tiene 31 bicis disponibles, 4 docks libres
+  de 35 totales (capacidad), con un 66% de ocupación actual.
+  Espacio muy limitado para devoluciones — si necesitas dejar bicis,
+  considera Michigan Ave & Washington St a 272 m con 17 docks libres.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 2
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: Necesito dejar 5 bicis, ¿qué hay cerca de Michigan Ave & Washington St?
+
+Respuesta ideal:
+  Tienes dos buenas opciones cercanas:
+    1. LaSalle St & Washington St — 24 docks libres / 27 cap. / 11% ocup. — 621 m
+    2. Clinton St & Washington Blvd — 26 docks libres / 31 cap. / 16% ocup. — 410 m
+  Recomiendo Clinton St & Washington Blvd: más cerca y más espacio disponible.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 3
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: ¿Qué estaciones cerca de Navy Pier están a punto de quedarse sin bicis?
+
+Respuesta ideal:
+  La estación Navy Pier (CHI01747) tiene 9 bicis de 71 totales (12.7% ocup.).
+  ALERTA: está por debajo del umbral del 15% — necesita reposición urgente.
+  Estación secundaria en riesgo: Streeter Dr & Grand Ave con 8% de ocupación.
+  Prioriza Navy Pier para la próxima ruta de reposición.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 4
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: Tengo 12 bicis en el camión. ¿Dónde las puedo dejar cerca de Millennium Park?
+
+Respuesta ideal:
+  Dos opciones para dejar las 12 bicis:
+    1. Michigan Ave & Washington St — 17 docks libres / 43 cap. / 60% ocup. — 272 m
+    2. LaSalle St & Washington St — 24 docks libres / 27 cap. / 11% ocup. — 950 m
+  Recomiendo Michigan Ave & Washington St por proximidad. Si quieres repartir,
+  lleva 8 a Michigan Ave y 4 a LaSalle St.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 5
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: Estoy en LaSalle St & Washington Blvd, necesito dejar bicis. Dame las 3 mejores opciones.
+
+Respuesta ideal:
+  Las 3 mejores opciones desde LaSalle St & Washington Blvd:
+    1. LaSalle St & Washington St — 24 docks libres / 27 cap. / 11% ocup. — 74 m
+    2. Clinton St & Washington Blvd — 26 docks libres / 31 cap. / 16% ocup. — 410 m
+    3. Michigan Ave & Washington St — 17 docks libres / 43 cap. / 60% ocup. — 758 m
+  Opción 1 es la más cercana. Opción 2 tiene más espacio disponible.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 6
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: ¿Cuál es la estación que más necesita bicis cerca de University of Chicago?
+
+Respuesta ideal:
+  La estación que más necesita bicis en esa zona es:
+  Ellis Ave & 60th St (CHI00765) — 5 bicis disponibles / 19 cap. / 26% ocup.
+  Segunda más urgente: University Ave & 57th St — 8 bicis / 23 cap. / 34% ocup.
+  Prioriza Ellis Ave para la próxima entrega.
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 7
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: Tengo 10 bicis. ¿Las dejo todas en una estación o las reparto? Estoy cerca de Museum Campus.
+
+Respuesta ideal:
+  La estación Field Museum (CHI01749) tiene 52 docks libres / 71 cap. / 27% ocup.
+  Puede absorber las 10 bicis sin problema.
+  Si prefieres repartir: lleva 6 a Field Museum y 4 a Soldier Field
+  (CHI01748, 18 docks libres, a 800 m).
+
+────────────────────────────────────────────────────────────────────────────────
+EJEMPLO 8
+────────────────────────────────────────────────────────────────────────────────
+Pregunta: ¿Qué estaciones tienen espacio cerca de Canal St & Adams St?
+
+Respuesta ideal:
+  Estaciones con espacio disponible cerca de Canal St & Adams St:
+    1. Clinton St & Washington Blvd — 26 docks libres / 31 cap. / 16% ocup. — 0.41 km
+    2. LaSalle St & Washington St — 24 docks libres / 27 cap. / 11% ocup. — 0.78 km
+    3. Millennium Park — 4 docks libres / 35 cap. / 89% ocup. — 1.32 km
+  Evita Millennium Park, está casi llena. Prioriza Clinton St.
+
+================================================================================
