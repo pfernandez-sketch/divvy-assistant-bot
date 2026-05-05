@@ -76,11 +76,29 @@ html, body, [class*="css"] {
 
 /* ── Chat messages ── */
 .stChatMessage {
+    margin-bottom: 8px !important;
+    width: fit-content !important;
+    max-width: 75% !important;
+}
+
+/* Usuario — derecha, azul oscuro tipo burbuja WhatsApp */
+.stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
+    background: linear-gradient(135deg, rgba(0,188,212,0.08), rgba(0,151,167,0.05)) !important;
+    border: 1px solid rgba(0,188,212,0.25) !important;
+    border-radius: 18px 18px 4px 18px !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+/* Asistente — izquierda, oscuro tipo burbuja WhatsApp */
+.stChatMessage:has([data-testid="stChatMessageAvatarAssistant"]) {
     background: #141820 !important;
     border: 1px solid #1e2535 !important;
-    border-radius: 12px !important;
-    margin-bottom: 12px !important;
+    border-radius: 18px 18px 18px 4px !important;
+    margin-right: auto !important;
+    margin-left: 0 !important;
 }
+
 [data-testid="stChatMessageContent"] {
     color: #e8eaf0 !important;
 }
