@@ -76,11 +76,26 @@ html, body, [class*="css"] {
 
 /* ── Chat messages ── */
 .stChatMessage {
-    background: #141820 !important;
-    border: 1px solid #1e2535 !important;
     border-radius: 12px !important;
     margin-bottom: 12px !important;
 }
+
+/* Mensajes del usuario — derecha, azul */
+.stChatMessage[data-testid="stChatMessageUser"] {
+    background: linear-gradient(135deg, rgba(0,188,212,0.15), rgba(0,151,167,0.10)) !important;
+    border: 1px solid rgba(0,188,212,0.35) !important;
+    margin-left: 15% !important;
+    margin-right: 0 !important;
+}
+
+/* Mensajes del asistente — izquierda, oscuro */
+.stChatMessage[data-testid="stChatMessageAssistant"] {
+    background: #141820 !important;
+    border: 1px solid #1e2535 !important;
+    margin-right: 15% !important;
+    margin-left: 0 !important;
+}
+
 [data-testid="stChatMessageContent"] {
     color: #e8eaf0 !important;
 }
