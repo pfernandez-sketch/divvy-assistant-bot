@@ -78,23 +78,22 @@ html, body, [class*="css"] {
 .stChatMessage {
     border-radius: 18px !important;
     margin-bottom: 12px !important;
-    max-width: 80% !important;
 }
 
-/* Mensajes del usuario — derecha, azul */
-[data-testid="stChatMessageUser"] {
+/* Usuario — derecha, azul */
+.stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
     background: linear-gradient(135deg, rgba(0,188,212,0.18), rgba(0,151,167,0.12)) !important;
     border: 1px solid rgba(0,188,212,0.35) !important;
-    margin-left: auto !important;
+    margin-left: 20% !important;
     margin-right: 0 !important;
     border-bottom-right-radius: 4px !important;
 }
 
-/* Mensajes del asistente — izquierda, oscuro */
-[data-testid="stChatMessageAssistant"] {
+/* Asistente — izquierda, oscuro */
+.stChatMessage:has([data-testid="stChatMessageAvatarAssistant"]) {
     background: #141820 !important;
     border: 1px solid #1e2535 !important;
-    margin-right: auto !important;
+    margin-right: 20% !important;
     margin-left: 0 !important;
     border-bottom-left-radius: 4px !important;
 }
