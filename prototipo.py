@@ -96,7 +96,7 @@ html, body, [class*="css"] {
     background: #141820 !important;
     border: 1px solid #1e2535 !important;
     border-radius: 18px 18px 18px 4px !important;
-    margin-right: auto !important;
+    margin-right: %8 !important;
     margin-left: 0 !important;
 }
 
