@@ -524,7 +524,6 @@ con_evento = df_historico[df_historico['evento'] == True]
 Responde **SIEMPRE** con un JSON válido y **NADA MÁS**. Sin texto antes ni después.
 
 ```json
-{{"tipo": "grafico", "codigo": "...", "interpretacion": "..."}}
 {{"tipo": "texto_analitico", "codigo": "...", "interpretacion": "..."}}
 {{"tipo": "fuera_de_alcance", "codigo": "", "interpretacion": "Lo siento, solo puedo responder preguntas sobre las estaciones de Divvy."}}
 ```
@@ -533,12 +532,9 @@ Responde **SIEMPRE** con un JSON válido y **NADA MÁS**. Sin texto antes ni des
 
 - Acceso a: `df_merged`, `df_distances`, `df_historico`, `df_clima`, `df_eventos`, `pd`, `px`, `go`, `np`, `haversine`, `datetime`, `timedelta`
 - **NUNCA** uses `import` en el código generado
-- Gráficos: guarda en variable `fig` (Plotly con `template='plotly_dark'`)
 - Análisis: guarda en variable `resultado`
-- Colores: `'#00bcd4'` principal, `'#0097a7'` secundario
 - Strings: **siempre** comillas simples dentro del código para no romper el JSON
 - Seguridad: verifica `if not df.empty` antes de usar `.iloc[0]`
-- Mapas: `px.scatter_mapbox` con `mapbox_style='carto-darkmatter'`
 - **SIEMPRE** empieza el código filtrando por franja actual: `df_actual = df_merged[df_merged['franja'] == '{current_slot}']`
 
 ## Formato obligatorio de datos por estación
@@ -1031,8 +1027,6 @@ if not st.session_state.messages:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if msg.get("fig"):
-            st.plotly_chart(msg["fig"], use_container_width=True)
         if msg.get("resultado") is not None:
             res = msg["resultado"]
             if isinstance(res, pd.DataFrame):
