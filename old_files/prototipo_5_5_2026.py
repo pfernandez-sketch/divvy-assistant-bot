@@ -692,21 +692,14 @@ def build_system_prompt(df_merged: pd.DataFrame, dt: datetime.datetime = None) -
             metrics["name_example"]   = str(df_merged["name"].iloc[0]) if "name" in df_merged.columns else "Millennium Park"
             metrics["cap_min"]        = int(df_merged["capacity"].min()) if "capacity" in df_merged.columns else 0
             metrics["cap_max"]        = int(df_merged["capacity"].max()) if "capacity" in df_merged.columns else 0
-            metrics["total_stations"] = int(df_merged["station_id"].nunique()) if "station_id" in df_merged.columns else 0
-
-            # Filtrar por franja actual para que los totales no se multipliquen x48
-            current_slot = metrics["current_slot"]
-            df_current = df_merged[df_merged["franja"] == current_slot]
-            if df_current.empty:
-                df_current = df_merged.drop_duplicates(subset=["station_id"], keep="last")
-
-            metrics["total_capacity"] = int(df_current["capacity"].sum()) if "capacity" in df_current.columns else 0
-            metrics["total_bikes"]    = int(df_current["num_bikes_available"].sum()) if "num_bikes_available" in df_current.columns else 0
-            metrics["total_ebikes"]   = int(df_current["num_ebikes_available"].sum()) if "num_ebikes_available" in df_current.columns else 0
-            metrics["occ_min"]        = float(df_current["occupancy_pct"].min()) if "occupancy_pct" in df_current.columns else 0.0
-            metrics["occ_max"]        = float(df_current["occupancy_pct"].max()) if "occupancy_pct" in df_current.columns else 0.0
-            metrics["high_occ_count"] = int((df_current["occupancy_pct"] > 85).sum()) if "occupancy_pct" in df_current.columns else 0
-            metrics["low_occ_count"]  = int((df_current["occupancy_pct"] < 15).sum()) if "occupancy_pct" in df_current.columns else 0
+            metrics["total_stations"] = len(df_merged)
+            metrics["total_capacity"] = int(df_merged["capacity"].sum()) if "capacity" in df_merged.columns else 0
+            metrics["total_bikes"]    = int(df_merged["num_bikes_available"].sum()) if "num_bikes_available" in df_merged.columns else 0
+            metrics["total_ebikes"]   = int(df_merged["num_ebikes_available"].sum()) if "num_ebikes_available" in df_merged.columns else 0
+            metrics["occ_min"]        = float(df_merged["occupancy_pct"].min()) if "occupancy_pct" in df_merged.columns else 0.0
+            metrics["occ_max"]        = float(df_merged["occupancy_pct"].max()) if "occupancy_pct" in df_merged.columns else 0.0
+            metrics["high_occ_count"] = int((df_merged["occupancy_pct"] > 85).sum()) if "occupancy_pct" in df_merged.columns else 0
+            metrics["low_occ_count"]  = int((df_merged["occupancy_pct"] < 15).sum()) if "occupancy_pct" in df_merged.columns else 0
         except Exception:
             pass
 
