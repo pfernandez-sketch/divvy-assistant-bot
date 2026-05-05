@@ -79,12 +79,13 @@ html, body, [class*="css"] {
     margin-bottom: 8px !important;
     width: fit-content !important;
     max-width: 75% !important;
+    min-width: 35% !important;
 }
 
-/* Usuario — derecha, azul oscuro tipo burbuja WhatsApp */
+/* Usuario — derecha, gris cristalino */
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
-    background: linear-gradient(135deg, rgba(0,188,212,0.08), rgba(0,151,167,0.05)) !important;
-    border: 1px solid rgba(0,188,212,0.25) !important;
+    background: linear-gradient(135deg, rgba(180,200,220,0.08), rgba(160,180,200,0.05)) !important;
+    border: 1px solid rgba(180,200,220,0.2) !important;
     border-radius: 18px 18px 4px 18px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
