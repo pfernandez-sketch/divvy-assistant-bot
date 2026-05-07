@@ -273,7 +273,7 @@ st.markdown(DIVVY_CSS, unsafe_allow_html=True)
 # =============================================================================
 # 3. CONSTANTES Y RUTAS DE ARCHIVOS
 # =============================================================================
-MODEL_NAME = "gpt-4.1-mini"
+MODEL_NAME = "gpt-4.1"
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
