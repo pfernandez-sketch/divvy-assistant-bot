@@ -116,6 +116,7 @@ html, body, [class*="css"] {
     margin-right: auto !important;
     margin-left: 0 !important;
     color: white !important;
+    padding: 16px 20px !important;
 }
 
 [data-testid="stChatMessageContent"] p {
@@ -182,15 +183,14 @@ html, body, [class*="css"] {
 
 /* ── Info boxes (Result blocks) ── */
 [data-testid="stNotification"] {
+    margin: 4px 16px 4px 4px !important;
+    width: auto !important;
+    box-sizing: border-box !important;
     background: rgba(255,255,255,0.10) !important;
     backdrop-filter: blur(12px) !important;
     border: 1px solid rgba(255,255,255,0.2) !important;
     border-radius: 16px !important;
     color: white !important;
-    margin-right: 16px !important;
-    margin-left: 0 !important;
-    width: calc(100% - 16px) !important;
-    box-sizing: border-box !important;
 }
 [data-testid="stNotification"] div {
     color: white !important;
