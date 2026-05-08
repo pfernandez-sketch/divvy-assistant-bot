@@ -192,8 +192,6 @@ html, body, [class*="css"] {
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
-</style>
-"""
 
 /* ── Login animado ── */
 @keyframes fadeSlideUp {
@@ -213,7 +211,7 @@ header {visibility: hidden;}
     margin-bottom: 4px;
     animation: fadeSlideUp 0.5s ease both;
 }
-.login-brand span { color: #00bcd4; }
+.login-brand span { color: #1A6BF0; }
 .login-tagline {
     font-size: 13px;
     color: #8892a4;
@@ -228,8 +226,9 @@ header {visibility: hidden;}
     animation: fadeSlideUp 0.5s ease 0.2s both;
 }
 .role-card {
-    background: #141820;
-    border: 1px solid #1e2535;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 20px;
     padding: 32px 24px;
     cursor: pointer;
@@ -238,29 +237,30 @@ header {visibility: hidden;}
 }
 .role-card:hover {
     transform: scale(1.05);
-    border-color: #00bcd4;
-    box-shadow: 0 8px 32px rgba(0,188,212,0.2);
-    background: rgba(0,188,212,0.06);
+    border-color: #1A6BF0;
+    box-shadow: 0 8px 32px rgba(26,107,240,0.2);
+    background: rgba(26,107,240,0.1);
 }
 .role-card.selected {
-    border-color: #00bcd4 !important;
-    background: rgba(0,188,212,0.12) !important;
+    border-color: #1A6BF0 !important;
+    background: rgba(26,107,240,0.2) !important;
     transform: scale(1.04) !important;
-    box-shadow: 0 8px 32px rgba(0,188,212,0.25) !important;
+    box-shadow: 0 8px 32px rgba(26,107,240,0.3) !important;
 }
 .role-icon { font-size: 36px; margin-bottom: 12px; }
 .role-title { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
-.role-desc { font-size: 12px; color: #8892a4; line-height: 1.5; }
+.role-desc { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 .login-form-area {
     animation: fadeSlideUp 0.4s ease both;
-    background: #141820;
-    border: 1px solid #1e2535;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.15);
     border-radius: 16px;
     padding: 24px;
 }
 div[data-testid="stButton"] button[kind="primary"],
 .stButton > button[data-testid="baseButton-secondary"]:last-of-type {
-    background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
+    background: #1A6BF0 !important;
     color: white !important;
     border: none !important;
 }
