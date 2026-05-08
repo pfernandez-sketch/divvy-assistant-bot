@@ -90,12 +90,17 @@ html, body, [class*="css"] {
 
 /* User — blue bubble */
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
-    background: #1A6BF0 !important;
-    border: none !important;
+    background: rgba(26, 107, 240, 0.45) !important;
+    border: 1px solid rgba(26, 107, 240, 0.6) !important;
     border-radius: 20px 20px 4px 20px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
-    color: white !important;
+}
+.stChatMessage:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 /* Assistant — glass bubble */
@@ -1014,7 +1019,7 @@ Aquí tienes ejemplos del tono y formato esperado:
 if not st.session_state.messages:
     st.markdown("""
     <div style="text-align:center;padding:10vh 20px;">
-        <div style="background:#1A6BF0; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:32px;">🚲</div>
+        <div style="font-size:56px; margin:0 auto 16px auto; filter: drop-shadow(0 4px 12px rgba(255,255,255,0.15));">🚲</div>
         <div style="font-size:24px;font-weight:700;color:#ffffff;margin-bottom:8px;">
             Asistente de Rebalanceo Divvy
         </div>
