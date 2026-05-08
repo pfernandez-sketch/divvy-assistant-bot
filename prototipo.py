@@ -265,16 +265,6 @@ div[data-testid="stButton"] button[kind="primary"],
     border: none !important;
 }
 
-.divvy-logo-img {
-    height: 36px;
-    width: auto;
-    mix-blend-mode: screen;
-    filter: brightness(0) invert(1);
-}
-@media (max-width: 640px) {
-    .divvy-logo-img { height: 28px; }
-}
-
 /* ── Mobile Layout Fixes ── */
 @media (max-width: 640px) {
     /* 1. Header — compact single line */
@@ -929,10 +919,10 @@ dt_str = pd.to_datetime(current_dt).strftime("%a %d/%m · %H:%M")
 
 st.markdown(f"""
 <div class="divvy-header">
-    <div class="divvy-logo-img-wrap">
-        <img src="app/static/divvy_logo.png" class="divvy-logo-img" alt="Divvy" />
+    <div>
+        <div class="divvy-logo-text">DIV<span>VY</span></div>
+        <div class="divvy-subtitle">Analytics Dashboard - Chicago, IL</div>
     </div>
-    <div class="divvy-subtitle">Analytics Dashboard - Chicago, IL</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
         <div style="text-align:right;">
             <div style="font-size:11px;color:#8892a4;">Último snapshot</div>
