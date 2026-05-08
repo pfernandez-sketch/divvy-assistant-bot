@@ -9,17 +9,6 @@ import json
 import re
 import os
 import datetime
-import base64
-
-def get_logo_base64():
-    try:
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "divvy.png")
-        with open(logo_path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
-    except Exception:
-        return ""
-
-LOGO_B64 = get_logo_base64()
 
 # =============================================================================
 # 1. CONFIGURACIÓN INICIAL DE LA PÁGINA
@@ -277,10 +266,10 @@ div[data-testid="stButton"] button[kind="primary"],
 }
 
 .divvy-logo-img {
-    height: 38px;
+    height: 36px;
     width: auto;
+    mix-blend-mode: screen;
     filter: brightness(0) invert(1);
-    mix-blend-mode: normal;
 }
 @media (max-width: 640px) {
     .divvy-logo-img { height: 28px; }
@@ -941,7 +930,7 @@ dt_str = pd.to_datetime(current_dt).strftime("%a %d/%m · %H:%M")
 st.markdown(f"""
 <div class="divvy-header">
     <div class="divvy-logo-img-wrap">
-        <img src="data:image/png;base64,{LOGO_B64}" class="divvy-logo-img" alt="Divvy" />
+        <img src="app/static/divvy_logo.png" class="divvy-logo-img" alt="Divvy" />
     </div>
     <div class="divvy-subtitle">Analytics Dashboard - Chicago, IL</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
