@@ -95,12 +95,16 @@ html, body, [class*="css"] {
     border-radius: 20px 20px 4px 20px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
+    padding: 12px 16px !important;
+    align-items: center !important;
 }
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
     text-align: center !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Assistant — glass bubble */
@@ -183,6 +187,10 @@ html, body, [class*="css"] {
     border: 1px solid rgba(255,255,255,0.2) !important;
     border-radius: 16px !important;
     color: white !important;
+    margin-right: 16px !important;
+    margin-left: 0 !important;
+    width: calc(100% - 16px) !important;
+    box-sizing: border-box !important;
 }
 [data-testid="stNotification"] div {
     color: white !important;
