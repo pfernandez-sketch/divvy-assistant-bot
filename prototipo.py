@@ -32,7 +32,7 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 .stApp {
-    background-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%), 
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), 
                       url("https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80");
     background-size: cover;
     background-position: center;
@@ -845,81 +845,7 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
     return local_vars.get("fig", None), local_vars.get("resultado", None)
 
 
-# =============================================================================
-# 8. GESTIÓN DE SEGURIDAD (Login)
-# =============================================================================
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
 
-if not st.session_state.authenticated:
-    if "login_role" not in st.session_state:
-        st.session_state.login_role = None
-
-    role = st.session_state.login_role
-
-    st.markdown("""
-    <div class="login-wrapper">
-        <div class="login-brand">DIV<span>VY</span></div>
-        <div class="login-tagline">Operations Intelligence Platform · Chicago, IL</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 2.4, 1])
-    with col2:
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("🚛\n\n**Operario de Campo**\n\nAccede al asistente de rebalanceo en tiempo real",
-                        key="btn_operario", use_container_width=True):
-                st.session_state.login_role = "operario"
-                st.rerun()
-            st.markdown(f"""
-            <style>
-            div[data-testid="stButton"] button[kind="secondary"]:first-of-type {{
-                min-height: 140px; border-radius: 20px; font-size: 13px; line-height: 1.5;
-                {'border: 1px solid #00bcd4 !important; background: rgba(0,188,212,0.12) !important;' if role == 'operario' else ''}
-            }}
-            </style>
-            """, unsafe_allow_html=True)
-
-        with c2:
-            if st.button("📊\n\n**Equipo de Análisis**\n\nPanel de métricas y datos históricos del sistema",
-                        key="btn_analisis", use_container_width=True):
-                st.session_state.login_role = "analisis"
-                st.rerun()
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        if role == "operario":
-            pwd = st.text_input("", type="password", placeholder="🔐 Contraseña de acceso")
-            if st.button("Entrar al Asistente →", use_container_width=True, key="btn_entrar"):
-                if pwd == st.secrets["PASSWORD"]:
-                    st.session_state.authenticated = True
-                    st.session_state.user_role = "operario"
-                    st.rerun()
-                else:
-                    st.error("❌ Contraseña incorrecta.")
-
-        elif role == "analisis":
-            st.markdown("""
-            <div style="background:rgba(0,188,212,0.06);border:1px solid rgba(0,188,212,0.2);
-                border-radius:16px;padding:28px 24px;text-align:center;animation:fadeSlideUp 0.3s ease both;">
-                <div style="font-size:28px;margin-bottom:12px;">🔒</div>
-                <div style="color:#ffffff;font-weight:600;font-size:15px;margin-bottom:8px;">Acceso restringido</div>
-                <div style="color:#8892a4;font-size:13px;line-height:1.6;">
-                    El panel de análisis estará disponible próximamente.<br>
-                    <span style="color:#00bcd4;">Contacta con tu supervisor para más información.</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        else:
-            st.markdown("""
-            <div style="text-align:center;color:#8892a4;font-size:13px;padding:16px;">
-                ↑ Selecciona tu perfil para continuar
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.stop()
 
 
 # =============================================================================
