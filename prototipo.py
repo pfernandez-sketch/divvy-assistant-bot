@@ -264,6 +264,62 @@ div[data-testid="stButton"] button[kind="primary"],
     color: white !important;
     border: none !important;
 }
+
+/* ── Mobile Layout Fixes ── */
+@media (max-width: 640px) {
+    /* 1. Header — compact single line */
+    .divvy-header {
+        padding: 10px 16px !important;
+        margin: -1rem -1rem 1rem -1rem !important;
+    }
+    .divvy-logo-text { font-size: 22px !important; }
+    .divvy-subtitle { display: none !important; }
+    .divvy-badge { font-size: 10px !important; padding: 2px 8px !important; }
+    .divvy-header > div:last-child { gap: 8px !important; }
+    .divvy-header div[style*="font-size:11px"] { display: none !important; }
+    .divvy-header div[style*="font-size:13px"] { font-size: 11px !important; }
+
+    /* 2. Chips — horizontal scroll row */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 8px !important;
+        padding-bottom: 4px !important;
+        scrollbar-width: none !important;
+    }
+    [data-testid="stHorizontalBlock"]::-webkit-scrollbar { display: none !important; }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+        min-width: 200px !important;
+        flex: 0 0 auto !important;
+    }
+    .stButton > button[key*="chip"] {
+        font-size: 12px !important;
+        padding: 8px 14px !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+    }
+
+    /* 3. Chat bubbles — hide avatars, full width */
+    .stChatMessage { max-width: 88% !important; }
+    [data-testid="stChatMessageAvatarUser"],
+    [data-testid="stChatMessageAvatarAssistant"] {
+        display: none !important;
+    }
+    .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
+        border-radius: 16px 16px 4px 16px !important;
+    }
+    .stChatMessage:has([data-testid="stChatMessageAvatarAssistant"]) {
+        border-radius: 16px 16px 16px 4px !important;
+    }
+
+    /* 4. Section titles — smaller */
+    .section-title { font-size: 18px !important; margin-bottom: 2px !important; }
+    .section-sub { font-size: 13px !important; margin-bottom: 12px !important; }
+
+    /* 5. Input bar — ensure placeholder doesn't clip */
+    .stChatInputContainer { padding: 4px 8px !important; }
+    .stChatInput textarea { font-size: 14px !important; }
+}
 </style>
 """
 
