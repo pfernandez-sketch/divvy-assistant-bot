@@ -13,7 +13,7 @@ import base64
 
 def get_logo_base64():
     try:
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "divvy_logo.png")
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "divvy.png")
         with open(logo_path, "rb") as f:
             return base64.b64encode(f.read()).decode()
     except Exception:
