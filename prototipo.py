@@ -27,25 +27,29 @@ DIVVY_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ── Base ── */
+/* ── Base & Background ── */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 .stApp {
-    background: #0c0e14;
+    background-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%), 
+                      url("https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: #e8eaf0;
 }
 
 /* ── Header bar ── */
 .divvy-header {
-    background: linear-gradient(135deg, #141820 0%, #1a1f2e 100%);
-    border-bottom: 2px solid #00bcd4;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
     padding: 14px 32px;
     display: flex;
     align-items: center;
     gap: 16px;
     margin: -1rem -1rem 2rem -1rem;
-    box-shadow: 0 4px 24px rgba(0,188,212,0.15);
+    box-shadow: none !important;
 }
 .divvy-logo-text {
     font-size: 28px;
@@ -54,17 +58,19 @@ html, body, [class*="css"] {
     color: #ffffff;
 }
 .divvy-logo-text span {
-    color: #00bcd4;
+    color: #1A6BF0;
 }
 .divvy-subtitle {
     font-size: 13px;
-    color: #8892a4;
+    color: rgba(255,255,255,0.6);
     margin-top: 2px;
     font-weight: 400;
     letter-spacing: 0.3px;
 }
 .divvy-badge {
-    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
     color: white;
     font-size: 11px;
     font-weight: 600;
@@ -76,125 +82,118 @@ html, body, [class*="css"] {
 
 /* ── Chat messages ── */
 .stChatMessage {
-    margin-bottom: 8px !important;
+    margin-bottom: 12px !important;
     width: fit-content !important;
-    max-width: 75% !important;
-    min-width: 35% !important;
+    max-width: 80% !important;
+    min-width: 20% !important;
 }
 
-/* Usuario — derecha, gris cristalino */
+/* User — blue bubble */
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
-    background: linear-gradient(135deg, rgba(180,200,220,0.08), rgba(160,180,200,0.05)) !important;
-    border: 1px solid rgba(180,200,220,0.2) !important;
-    border-radius: 18px 18px 4px 18px !important;
+    background: #1A6BF0 !important;
+    border: none !important;
+    border-radius: 20px 20px 4px 20px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
+    color: white !important;
 }
 
-/* Asistente — izquierda, oscuro tipo burbuja WhatsApp */
+/* Assistant — glass bubble */
 .stChatMessage:has([data-testid="stChatMessageAvatarAssistant"]) {
-    background: #141820 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 18px 18px 18px 4px !important;
-    margin-right: %8 !important;
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 20px 20px 20px 4px !important;
+    margin-right: auto !important;
     margin-left: 0 !important;
+    color: white !important;
 }
 
-[data-testid="stChatMessageContent"] {
-    color: #e8eaf0 !important;
+[data-testid="stChatMessageContent"] p {
+    color: white !important;
+    margin-bottom: 0 !important;
 }
 
 /* ── Chat input ── */
 .stChatInputContainer {
-    background: #141820 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 12px !important;
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 999px !important;
+    padding: 4px 12px !important;
 }
 .stChatInput textarea {
     background: transparent !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
 }
-
-/* ── Buttons ── */
-.stButton > button {
-    background: linear-gradient(135deg, rgba(0,188,212,0.12), rgba(0,151,167,0.08));
-    color: #e8eaf0;
-    border: 1px solid rgba(0,188,212,0.25);
-    border-radius: 16px;
-    font-weight: 500;
-    padding: 10px 20px;
-    transition: all 0.25s ease;
-}
-.stButton > button:hover {
-    transform: scale(1.03);
-    box-shadow: 0 8px 24px rgba(0,188,212,0.25);
-    background: linear-gradient(135deg, rgba(0,188,212,0.22), rgba(0,151,167,0.16)) !important;
-    border-color: #00bcd4 !important;
-    color: #ffffff !important;
+.stChatInput button {
+    background-color: #1A6BF0 !important;
+    border-radius: 50% !important;
+    color: white !important;
 }
 
-/* ── Suggested Chips (Mobile) ── */
+/* ── Suggested Chips ── */
 .stButton > button[key*="chip"] {
+    background: rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255,255,255,0.25) !important;
+    border-radius: 999px !important;
+    color: white !important;
     font-size: 13px !important;
-    padding: 12px !important;
-    min-height: 60px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    line-height: 1.2 !important;
-    background: rgba(0, 188, 212, 0.1) !important;
-    border: 1px solid #00bcd4 !important;
+    padding: 10px 20px !important;
+    min-height: unset !important;
+    height: auto !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    display: block !important;
+    transition: all 0.2s ease !important;
+}
+.stButton > button[key*="chip"]:hover {
+    background: rgba(26,107,240,0.5) !important;
+    border-color: #1A6BF0 !important;
+    transform: translateY(-2px) !important;
 }
 
-/* ── Text input (password) ── */
-.stTextInput input {
-    background: #141820 !important;
-    border: 1px solid #1e2535 !important;
-    border-radius: 10px !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-}
-
-/* ── Info boxes ── */
-.info-chip {
-    display: inline-block;
-    background: rgba(0,188,212,0.12);
-    border: 1px solid rgba(0,188,212,0.3);
-    color: #00bcd4;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 4px 12px;
-    border-radius: 20px;
-}
+/* ── Section Titles ── */
 .section-title {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
-    color: #ffffff;
+    color: white !important;
     margin-bottom: 6px;
 }
 .section-sub {
     font-size: 14px;
-    color: #8892a4;
+    color: rgba(255,255,255,0.6) !important;
     margin-bottom: 24px;
 }
+[data-testid="stVerticalBlock"] > div:has(.section-title) {
+    background: transparent !important;
+}
 
-/* ── Mobile Optimization ── */
-@media (max-width: 640px) {
-    .divvy-header { padding: 12px 20px; }
-    .divvy-logo-text { font-size: 24px; }
-    .divvy-badge { display: none; }
-    .section-title { font-size: 18px; }
-    [data-testid="column"] { width: 100% !important; flex: 1 1 100% !important; }
-    .stChatInputContainer, .stChatInput textarea, [data-testid="stChatInput"] {
-        background-color: #141820 !important;
-    }
+/* ── Info boxes (Result blocks) ── */
+[data-testid="stNotification"] {
+    background: rgba(255,255,255,0.10) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-radius: 16px !important;
+    color: white !important;
+}
+[data-testid="stNotification"] div {
+    color: white !important;
 }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0c0e14; }
-::-webkit-scrollbar-thumb { background: #00bcd4; border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* ── Hide Streamlit Elements ── */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
 
 /* ── Login animado ── */
 @keyframes fadeSlideUp {
@@ -1032,12 +1031,12 @@ Aquí tienes ejemplos del tono y formato esperado:
 
 if not st.session_state.messages:
     st.markdown("""
-    <div style="text-align:center;padding:48px 20px 32px 20px;">
-        <div style="font-size:52px;margin-bottom:16px;">🚲</div>
-        <div style="font-size:20px;font-weight:700;color:#ffffff;margin-bottom:8px;">
+    <div style="text-align:center;padding:10vh 20px;">
+        <div style="background:#1A6BF0; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:32px;">🚲</div>
+        <div style="font-size:24px;font-weight:700;color:#ffffff;margin-bottom:8px;">
             Asistente de Rebalanceo Divvy
         </div>
-        <div style="font-size:14px;color:#8892a4;max-width:420px;margin:0 auto;line-height:1.6;">
+        <div style="font-size:16px;color:rgba(255,255,255,0.7);max-width:420px;margin:0 auto;line-height:1.6;">
             Pregúntame dónde dejar o recoger bicis, qué estaciones están en estado crítico,
             o cuáles necesitan reposición urgente.
         </div>
