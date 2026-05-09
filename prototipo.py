@@ -822,13 +822,15 @@ for i, q in enumerate(suggested):
 
 
 def handle_response(user_input: str, history: list):
+    """Procesa la pregunta, ejecuta codigo y devuelve interpretacion + datos para UI."""
     raw = get_openai_response(user_input, system_prompt, history)
     parsed = parse_response(raw)
     tipo   = parsed.get("tipo", "")
     codigo = parsed.get("codigo", "")
 
     if tipo == "fuera_de_alcance":
-        return parsed.get("interpretacion", "Lo siento, no puedo responder a eso."), None, parsed.get("raw_debug")
+        interp = parsed.get("interpretacion", "Lo siento, no puedo responder a eso.")
+        return interp, None, None, None, parsed.get("raw_debug")
 
     fig, resultado = None, None
     if codigo.strip():
@@ -845,7 +847,7 @@ NO uses {{}}, NO contradigas el resultado."""
 Aqui tienes ejemplos del tono y formato esperado:
 {TEST_CASES_CONTEXT}"""
     interp = get_openai_response(interp_prompt, INTERP_SYSTEM)
-    return f"💡 {interp}", fig, parsed.get("raw_debug")
+    return f"💡 {interp}", fig, resultado, codigo, parsed.get("raw_debug")
 
 
 if st.session_state.chip_fired and st.session_state.pending_question:
@@ -862,10 +864,16 @@ if st.session_state.chip_fired and st.session_state.pending_question:
         )
         with st.spinner("Consultando estaciones..."):
             try:
-                interp, fig, raw_debug = handle_response(user_input_chip, st.session_state.messages[:-1])
+                interp, fig, resultado, codigo, raw_debug = handle_response(
+                    user_input_chip, st.session_state.messages[:-1]
+                )
                 st.session_state.messages.append({
-                    "role": "assistant", "content": interp,
-                    "fig": fig, "raw_debug": raw_debug,
+                    "role"     : "assistant",
+                    "content"  : interp,
+                    "fig"      : fig,
+                    "resultado": resultado,
+                    "code"     : codigo,
+                    "raw_debug": raw_debug,
                 })
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
@@ -888,10 +896,22 @@ if not st.session_state.messages:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
+        if msg.get("resultado") is not None:
+            res = msg["resultado"]
+            if isinstance(res, pd.DataFrame):
+                st.dataframe(res, use_container_width=True)
+            else:
+                st.info(f"**Resultado:** {res}")
         if msg.get("fig") is not None:
             st.plotly_chart(msg["fig"], use_container_width=True)
         if msg.get("content"):
             st.markdown(msg["content"])
+        if msg.get("code"):
+            with st.expander("🔍 Ver codigo generado", expanded=False):
+                st.code(msg["code"], language="python")
+        if msg.get("raw_debug"):
+            with st.expander("🛠️ Debug: Respuesta original del modelo", expanded=False):
+                st.text(msg["raw_debug"])
 
 if user_input := st.chat_input("Donde dejo las bicis? Que estacion necesita reposicion?"):
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -904,10 +924,16 @@ if user_input := st.chat_input("Donde dejo las bicis? Que estacion necesita repo
         )
         with st.spinner("Consultando estaciones..."):
             try:
-                interp, fig, raw_debug = handle_response(user_input, st.session_state.messages[:-1])
+                interp, fig, resultado, codigo, raw_debug = handle_response(
+                    user_input, st.session_state.messages[:-1]
+                )
                 st.session_state.messages.append({
-                    "role": "assistant", "content": interp,
-                    "fig": fig, "raw_debug": raw_debug,
+                    "role"     : "assistant",
+                    "content"  : interp,
+                    "fig"      : fig,
+                    "resultado": resultado,
+                    "code"     : codigo,
+                    "raw_debug": raw_debug,
                 })
             except Exception as e:
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {e}"})
