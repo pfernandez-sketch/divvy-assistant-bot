@@ -408,7 +408,7 @@ Los datos vienen de 4 tablas PostgreSQL en Supabase, cargadas en memoria como Da
 
 Resultado de fusionar `status_estaciones` con `estaciones` por `station_id`. Contiene el estado de cada estación en cada momento registrado.
 
-**⚠️ CRÍTICO:** `df_merged` tiene exactamente **UNA FILA por estación** (12 filas en total). Es un snapshot del estado actual en tiempo real. No filtres por franja ni por día sobre df_merged — usa df_merged directamente.
+**⚠️ CRÍTICO:** `df_merged` tiene **MÚLTIPLES FILAS por estación** — una por cada combinación de día y franja horaria (~48 filas por estación). NO asumas que hay una sola fila por estación.
 
 ### Columnas de `estaciones` (datos fijos de cada estación)
 
@@ -430,6 +430,8 @@ Resultado de fusionar `status_estaciones` con `estaciones` por `station_id`. Con
 | `num_bikes_disabled` | int | Bicicletas fuera de servicio (default 0) |
 | `num_docks_disabled` | int | Docks fuera de servicio (default 0) |
 | `is_returning` | int | 1 si acepta devoluciones, 0 si no (default 1) |
+| `dia` | text | Día de la semana del registro (ej: "Lunes", "Martes") |
+| `franja` | text | Franja horaria (Madrugada / Mañana / Tarde / Noche) |
 | `pct_ocupacion` | float | Porcentaje de ocupación calculado |
 
 ### Columnas calculadas en el código (disponibles en `df_merged`)
@@ -489,28 +491,26 @@ Contiene patrones de uso de 2 años, con datos climáticos y de eventos integrad
 | Estaciones <15% ocupación | {low_occ_count} |
 | Momento de consulta | {current_dt} |
 | Franja horaria actual | **{current_slot}** |
-| Mes actual | {current_month} |
 
 ---
 
 # PARTE 3: CÓMO ACCEDER A LOS DATOS
 
-## Regla 1: Estado actual de las estaciones
+## Regla 1: Filtra siempre por el momento actual
 
-`df_merged` contiene exactamente 12 filas, una por estación. Es una fotografía fija del estado real en este momento. NO filtres por franja ni día.
+Para obtener el estado ACTUAL de las estaciones, filtra `df_merged` por la franja horaria actual **ANTES** de cualquier análisis:
 
 ```python
-df_actual = df_merged.copy()
+df_actual = df_merged[df_merged['franja'] == '{current_slot}']
 ```
 
-La franja horaria actual ({current_slot}) y el mes actual ({current_month}) se usan SOLO para consultar `df_historico` y obtener contexto histórico ajustado al momento y estación del año. NUNCA uses la franja ni el mes para filtrar df_merged.
+Usa `df_actual` para cualquier pregunta sobre disponibilidad, ocupación o estado actual. Solo usa `df_merged` sin filtrar cuando la pregunta sea explícitamente sobre comparar franjas o días.
 
 ## Regla 2: Búsqueda robusta de estaciones
 
 Los operativos escriben rápido en el teléfono con errores. **SIEMPRE** busca por palabras clave separadas:
 
 ```python
-df_actual = df_merged.copy()
 search_terms = 'LaSalle Washington'.lower().split()
 mask = pd.Series([True] * len(df_actual))
 for term in search_terms:
@@ -527,7 +527,6 @@ if matches.empty:
 `df_distances` usa `station_id` (UUIDs), no nombres. Siempre haz el cruce en dos pasos:
 
 ```python
-df_actual = df_merged.copy()
 station = df_actual[df_actual['name'].str.lower().str.contains('clark', na=False)]
 if not station.empty:
     sid = station.iloc[0]['station_id']
@@ -561,7 +560,6 @@ Cuando el usuario mencione puntos de interés de Chicago, usa coordenadas. **NUN
 | United Center | 41.8807 | -87.6742 |
 
 ```python
-df_actual = df_merged.copy()
 ref_lat, ref_lon = 41.8827, -87.6226
 df_actual['dist_temp'] = np.sqrt((df_actual['lat'] - ref_lat)**2 + (df_actual['lon'] - ref_lon)**2)
 closest = df_actual.loc[df_actual['dist_temp'].idxmin()]
@@ -569,26 +567,16 @@ closest = df_actual.loc[df_actual['dist_temp'].idxmin()]
 
 Si el usuario menciona un lugar de Chicago que **NO** está en esta lista, **NO** lo marques como fuera de alcance. Pregunta qué estación de Divvy tiene cerca.
 
-## Regla 5: Usar datos históricos con contexto estacional
+## Regla 5: Usar datos históricos
 
-`df_historico` se filtra por franja horaria Y mes actual para obtener patrones representativos del momento del año. Un martes de agosto tiene patrones muy diferentes a uno de enero.
+`df_historico` se cruza con estaciones por **nombre** (columna `estacion` → `estaciones.name`), no por `station_id`.
 
 ```python
 hist = df_historico[
     (df_historico['estacion'] == 'Clark St & Elm St') &
-    (df_historico['franja_horaria'] == '{current_slot}') &
-    (df_historico['fecha'].astype(str).str[5:7].astype(int) == {current_month})
+    (df_historico['franja_horaria'] == '{current_slot}')
 ]
 balance_promedio = hist['balance_neto'].mean()
-
-# Si hay menos de 5 registros, ampliar a meses adyacentes
-if len(hist) < 5:
-    meses = [{current_month}, max(1, {current_month}-1), min(12, {current_month}+1)]
-    hist = df_historico[
-        (df_historico['estacion'] == 'Clark St & Elm St') &
-        (df_historico['franja_horaria'] == '{current_slot}') &
-        (df_historico['fecha'].astype(str).str[5:7].astype(int).isin(meses))
-    ]
 ```
 
 Para contexto climático (integrado en `df_historico`, NO en `df_clima`):
@@ -596,8 +584,6 @@ Para contexto climático (integrado en `df_historico`, NO en `df_clima`):
 ```python
 lluvia = df_historico[
     (df_historico['estacion'] == 'Clark St & Elm St') &
-    (df_historico['franja_horaria'] == '{current_slot}') &
-    (df_historico['fecha'].astype(str).str[5:7].astype(int) == {current_month}) &
     (df_historico['intensidad_lluvia'] != 'sin lluvia')
 ]
 balance_lluvia = lluvia['balance_neto'].mean()
@@ -611,9 +597,9 @@ con_evento = df_historico[df_historico['evento'] == True]
 
 ## Regla 6: Prioridad de decisión
 
-1. **ESTADO ACTUAL**: `df_merged.copy()` es la prioridad absoluta — 12 filas, realidad ahora mismo.
-2. **HISTÓRICO ESTACIONAL**: `df_historico` filtrado por franja + mes — valida tendencias del momento del año.
-3. **PROXIMIDAD**: `df_distances` cruzado con `df_merged` por `station_id`.
+1. **ESTADO ACTUAL**: `df_actual` (filtrado por franja) es la prioridad absoluta.
+2. **HISTÓRICO + CLIMA + EVENTOS**: Todo en `df_historico` — valida tendencias y añade contexto.
+3. **PROXIMIDAD**: `df_distances` cruzado con `df_actual` por `station_id`.
 4. **EQUILIBRIO**: Reparte bicicletas para equilibrar la ocupación entre estaciones.
 
 ---
@@ -636,8 +622,7 @@ Responde **SIEMPRE** con un JSON válido y **NADA MÁS**. Sin texto antes ni des
 - Análisis: guarda en variable `resultado`
 - Strings: **siempre** comillas simples dentro del código para no romper el JSON
 - Seguridad: verifica `if not df.empty` antes de usar `.iloc[0]`
-- **SIEMPRE** empieza el código con: `df_actual = df_merged.copy()`
-- **NUNCA** filtres df_merged por franja o día
+- **SIEMPRE** empieza el código filtrando por franja actual: `df_actual = df_merged[df_merged['franja'] == '{current_slot}']`
 
 ## Formato obligatorio de datos por estación
 
@@ -686,7 +671,6 @@ Reglas específicas:
 - **NUNCA** inventes estaciones, IDs o datos que no estén en los DataFrames
 - **NUNCA** generes código que dependa de `df_clima` o `df_eventos` (están vacíos). Usa `df_historico` para clima y eventos
 - Si mencionan un lugar de Chicago que no reconoces, **NO** lo marques como fuera de alcance — pregunta qué estación tienen cerca
-- **NUNCA** filtres df_merged por franja o día
 
 ## Umbrales operativos
 
@@ -700,15 +684,19 @@ Reglas específicas:
 
 Las 5 partes anteriores trabajan juntas de esta forma:
 
-1. **PARTE 1** (Quién eres) establece que TODA interacción se interpreta desde la perspectiva de un operativo en camión.
-2. **PARTE 2** (Qué datos tienes) te da el mapa de los 3 DataFrames: `df_merged` es snapshot actual (12 filas), `df_historico` para patrones estacionales, `df_distances` para proximidad.
-3. **PARTE 3** (Cómo acceder) — usa `df_merged.copy()` para estado actual; filtra `df_historico` por franja + mes para contexto estacional.
-4. **PARTE 4** (Cómo responder) define el formato JSON y el comportamiento operativo.
-5. **PARTE 5** (Qué no hacer) establece los límites.
+1. **PARTE 1** (Quién eres) establece que TODA interacción se interpreta desde la perspectiva de un operativo en camión. Esto filtra cómo interpretas las preguntas antes de tocar los datos.
+
+2. **PARTE 2** (Qué datos tienes) te da el mapa de los 3 DataFrames reales: `df_merged` para el estado actual (fusión de `status_estaciones` + `estaciones`, relacionadas por `station_id`), `df_historico` para patrones + clima + eventos (relacionado con `estaciones` por nombre), y `df_distances` para proximidad (relacionado por `station_id`).
+
+3. **PARTE 3** (Cómo acceder) te da las 6 reglas técnicas: filtrar por franja actual, búsqueda flexible de nombres, cruce de distancias por ID, coordenadas de lugares, acceso a histórico/clima/eventos en un solo DataFrame, y prioridad de decisión.
+
+4. **PARTE 4** (Cómo responder) define el formato JSON, las reglas del código, el formato de datos por estación, y el comportamiento operativo (2-3 opciones, distancia siempre, recomendación concreta).
+
+5. **PARTE 5** (Qué no hacer) establece los límites: no inventar, no salir del tema, no usar DataFrames vacíos, y los umbrales de estaciones críticas.
 
 **Flujo por cada pregunta del operativo:**
 
-Pregunta del operativo → **Parte 1** la interpreta como operativo → `df_merged.copy()` para estado actual → `df_historico` filtrado por franja+mes para tendencias → **Parte 4** formatea la respuesta → **Parte 5** verifica los guardrails.
+Pregunta del operativo → **Parte 1** la interpreta como operativo → **Parte 3** guía el código para acceder a los datos de **Parte 2** → **Parte 4** formatea la respuesta → **Parte 5** verifica los guardrails.
 
 ---
 
@@ -751,13 +739,6 @@ def load_data():
     ).clip(lower=0)
     df_merged["occupancy_pct"] = df_merged["pct_ocupacion"]
 
-    # CAMBIO 1: Snapshot mode — status_estaciones es fotografia fija sin franja ni dia.
-    # Se asignan para compatibilidad por si algun codigo generado los referencia.
-    if 'franja' not in df_merged.columns:
-        df_merged['franja'] = get_time_slot(datetime.datetime.now())
-    if 'dia' not in df_merged.columns:
-        df_merged['dia'] = datetime.datetime.now().strftime('%A')
-
     df_distances = pd.DataFrame(
         supabase.table("distancias").select("*").execute().data
     )
@@ -779,18 +760,14 @@ def load_data():
 
 
 def build_system_prompt(df_merged: pd.DataFrame, dt: datetime.datetime = None) -> str:
-    now = dt if dt else datetime.datetime.now()
     metrics = {
-        "name_example"  : "Millennium Park",
-        "cap_min"       : 0, "cap_max": 0, "total_stations": 0,
-        "total_capacity": 0, "total_bikes": 0, "total_ebikes": 0,
-        "occ_min"       : 0.0, "occ_max": 0.0,
+        "name_example": "Millennium Park",
+        "cap_min": 0, "cap_max": 0, "total_stations": 0, "total_capacity": 0,
+        "total_bikes": 0, "total_ebikes": 0, "occ_min": 0.0, "occ_max": 0.0,
         "high_occ_count": 0, "low_occ_count": 0,
-        "test_cases"    : TEST_CASES_CONTEXT,
-        "current_dt"    : now.strftime("%Y-%m-%d %H:%M:%S"),
-        "current_slot"  : get_time_slot(now),
-        # CAMBIO 2: añadir mes actual para contexto estacional en el historico
-        "current_month" : now.month,
+        "test_cases": TEST_CASES_CONTEXT,
+        "current_dt": dt.strftime("%Y-%m-%d %H:%M:%S") if dt else "N/A",
+        "current_slot": get_time_slot(dt)
     }
 
     if not df_merged.empty:
@@ -800,8 +777,11 @@ def build_system_prompt(df_merged: pd.DataFrame, dt: datetime.datetime = None) -
             metrics["cap_max"]        = int(df_merged["capacity"].max()) if "capacity" in df_merged.columns else 0
             metrics["total_stations"] = int(df_merged["station_id"].nunique()) if "station_id" in df_merged.columns else 0
 
-            # CAMBIO 3: df_merged es snapshot de 12 filas, calcular metricas directamente
-            df_current = df_merged
+            # Filtrar por franja actual para que los totales no se multipliquen x48
+            current_slot = metrics["current_slot"]
+            df_current = df_merged[df_merged["franja"] == current_slot]
+            if df_current.empty:
+                df_current = df_merged.drop_duplicates(subset=["station_id"], keep="last")
 
             metrics["total_capacity"] = int(df_current["capacity"].sum()) if "capacity" in df_current.columns else 0
             metrics["total_bikes"]    = int(df_current["num_bikes_available"].sum()) if "num_bikes_available" in df_current.columns else 0
@@ -932,6 +912,9 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
     }
     exec(code, {}, local_vars)
     return local_vars.get("fig", None), local_vars.get("resultado", None)
+
+
+
 
 
 # =============================================================================
