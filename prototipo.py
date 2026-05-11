@@ -96,7 +96,7 @@ html, body, [class*="css"] {
     border-radius: 20px 20px 4px 20px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
-    padding: 8px 16px 30px 16px !important;
+    padding: 14px 16px !important;
     align-items: center !important;
     display: flex !important;
     flex-direction: row !important;
