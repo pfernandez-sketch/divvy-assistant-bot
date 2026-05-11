@@ -219,7 +219,7 @@ header {visibility: hidden;}
 /* ── Mobile Layout Fixes ── */
 @media (max-width: 640px) {
     .divvy-header {
-        padding: 6px 14px 20px 14px !important;
+        padding: 10px 16px !important;
         margin: -1rem -1rem 1rem -1rem !important;
     }
     .divvy-logo-text { font-size: 22px !important; }
