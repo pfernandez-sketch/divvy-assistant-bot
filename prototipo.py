@@ -98,14 +98,18 @@ html, body, [class*="css"] {
     margin-right: 0 !important;
     padding: 14px 16px !important;
     align-items: center !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
 }
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
-    text-align: center !important;
+    text-align: left !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     padding: 0 !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
+    min-height: 32px !important;
 }
 
 /* Assistant — glass bubble */
