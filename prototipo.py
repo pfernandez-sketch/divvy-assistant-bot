@@ -86,7 +86,7 @@ html, body, [class*="css"] {
     margin-bottom: 12px !important;
     width: fit-content !important;
     max-width: 60% !important;
-    min-width: 20% !important;
+    min-width: 40% !important;
 }
 
 /* User — blue bubble */
