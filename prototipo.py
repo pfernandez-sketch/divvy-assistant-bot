@@ -96,7 +96,7 @@ html, body, [class*="css"] {
     border-radius: 20px 20px 4px 20px !important;
     margin-left: auto !important;
     margin-right: 0 !important;
-    padding: 12px 16px !important;
+    padding: 14px 16px !important;
     align-items: center !important;
 }
 .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
@@ -105,7 +105,7 @@ html, body, [class*="css"] {
     align-items: center !important;
     justify-content: center !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
 }
 
 /* Assistant — glass bubble */
