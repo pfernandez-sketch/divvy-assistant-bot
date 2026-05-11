@@ -85,7 +85,7 @@ html, body, [class*="css"] {
 .stChatMessage {
     margin-bottom: 12px !important;
     width: fit-content !important;
-    max-width: 80% !important;
+    max-width: 60% !important;
     min-width: 20% !important;
 }
 
