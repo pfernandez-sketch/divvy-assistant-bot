@@ -9,6 +9,7 @@ import json
 import re
 import os
 import datetime
+import unicodedata
 
 # =============================================================================
 # 1. CONFIGURACIÓN INICIAL DE LA PÁGINA
@@ -33,7 +34,7 @@ html, body, [class*="css"] {
 }
 .stApp {
     background-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.88) 100%), 
-                      url("https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80");
+                      url("https://images.unsplash.com/photo-1581373449483-37449f962b6c?w=1920&q=80");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -783,7 +784,29 @@ def execute_code(code: str, df_merged: pd.DataFrame, df_distances: pd.DataFrame,
         "df_clima"     : df_clima,
         "df_eventos"   : df_eventos,
     }
-    exec(code, {}, local_vars)
+    def _sanitize_varnames(src):
+        result = []
+        i = 0
+        while i < len(src):
+            if src[i] in ('"', "'"):
+                quote = src[i:i+3] if src[i:i+3] in ('"""', "'''") else src[i]
+                result.append(quote)
+                i += len(quote)
+                while i < len(src):
+                    if src[i:i+len(quote)] == quote:
+                        result.append(quote)
+                        i += len(quote)
+                        break
+                    result.append(src[i:i+2] if src[i] == '\\' else src[i])
+                    i += 2 if src[i] == '\\' else 1
+            else:
+                c = src[i]
+                n = unicodedata.normalize('NFD', c)
+                result.append(''.join(ch for ch in n if unicodedata.category(ch) != 'Mn') or c)
+                i += 1
+        return ''.join(result)
+
+    exec(_sanitize_varnames(code), {}, local_vars)
     return local_vars.get("fig", None), local_vars.get("resultado", None)
 
 
@@ -821,7 +844,7 @@ system_prompt = build_system_prompt(df_merged, current_dt)
 # =============================================================================
 # 10. ASISTENTE ANALÍTICO
 # =============================================================================
-st.markdown('<p class="section-title">Asistente Analítico</p>', unsafe_allow_html=True)
+st.markdown('<p class="section-title">Asistente de Rebalanceo</p>', unsafe_allow_html=True)
 st.markdown('<p class="section-sub">Haz cualquier pregunta sobre las estaciones de Divvy en Chicago.</p>', unsafe_allow_html=True)
 
 if "messages" not in st.session_state:
@@ -833,7 +856,6 @@ if "pending_question" not in st.session_state:
 
 suggested = [
     "La estación Millennium Park está casi llena, ¿dónde puedo dejar 2 bicis cerca?",
-    "Está lloviendo, ¿qué estaciones cerca de oficinas se vaciarán antes?",
     "Tengo 12 bicis en el camión. ¿Dónde las puedo dejar cerca de Millennium Park?",
 ]
 cols_chips = st.columns(len(suggested))
