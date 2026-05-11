@@ -264,7 +264,7 @@ header {visibility: hidden;}
     .stChatInputContainer { padding: 4px 8px !important; }
     .stChatInput textarea { font-size: 14px !important; }
     .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
-    padding: 10px 14px !important;
+    padding: 12px 14px !important;
     align-items: center !important;
     display: flex !important;
     flex-direction: row !important;
