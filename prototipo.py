@@ -121,7 +121,7 @@ html, body, [class*="css"] {
     margin-right: auto !important;
     margin-left: 0 !important;
     color: white !important;
-    padding: 16px 20px !important;
+    padding: 8px 20px 22px 20px !important;
 }
 
 [data-testid="stChatMessageContent"] p {
