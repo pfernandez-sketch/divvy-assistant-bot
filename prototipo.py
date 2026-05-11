@@ -276,7 +276,15 @@ header {visibility: hidden;}
     margin: 0 !important;
     }
 }
-
+/* -- Limitar ancho del contenido en desktop -- */
+@media (min-width: 641px) {
+    .main .block-container {
+        max-width: 900px !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
+        margin: 0 auto !important;
+    }
+}
 </style>
 """
 
@@ -948,20 +956,8 @@ if not st.session_state.messages:
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        if msg.get("resultado") is not None:
-            res = msg["resultado"]
-            if isinstance(res, pd.DataFrame):
-                st.dataframe(res, use_container_width=True)
-            else:
-                st.info(f"**Resultado:** {res}")
         if msg.get("content"):
             st.markdown(msg["content"])
-        if msg.get("code"):
-            with st.expander("🔍 Ver código generado", expanded=False):
-                st.code(msg["code"], language="python")
-        if msg.get("raw_debug"):
-            with st.expander("🛠️ Debug: Respuesta original del modelo", expanded=False):
-                st.text(msg["raw_debug"])
 
 if user_input := st.chat_input("¿Dónde dejo las bicis? ¿Qué estación necesita reposición?"):
     st.session_state.messages.append({"role": "user", "content": user_input})
