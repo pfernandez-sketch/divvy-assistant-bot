@@ -259,12 +259,24 @@ header {visibility: hidden;}
     .stChatMessage:has([data-testid="stChatMessageAvatarAssistant"]) {
         border-radius: 16px 16px 16px 4px !important;
     }
-
     .section-title { font-size: 18px !important; margin-bottom: 2px !important; }
     .section-sub { font-size: 13px !important; margin-bottom: 12px !important; }
     .stChatInputContainer { padding: 4px 8px !important; }
     .stChatInput textarea { font-size: 14px !important; }
+    .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) {
+    padding: 10px 14px !important;
+    align-items: center !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    }
+    .stChatMessage:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+    min-height: unset !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    }
 }
+
 </style>
 """
 
