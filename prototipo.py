@@ -85,8 +85,8 @@ html, body, [class*="css"] {
 .stChatMessage {
     margin-bottom: 12px !important;
     width: fit-content !important;
-    max-width: 60% !important;
-    min-width: 40% !important;
+    max-width: 80% !important;
+    min-width: 20% !important;
 }
 
 /* User — blue bubble */
@@ -121,7 +121,7 @@ html, body, [class*="css"] {
     margin-right: auto !important;
     margin-left: 0 !important;
     color: white !important;
-    padding: 12px 20px 22px 20px !important;
+    padding: 14px 16px !important;
 }
 
 [data-testid="stChatMessageContent"] p {
