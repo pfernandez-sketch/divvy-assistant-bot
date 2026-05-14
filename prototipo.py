@@ -589,8 +589,6 @@ resultado = plan
 - Usa comillas simples en strings dentro del código
 - Verifica `if not df.empty` antes de `.iloc[0]`
 - No uses `import`
-- Filtra df_historico por mes SOLO si el usuario menciona un mes explícitamente. 
-  Si no menciona mes, usa todos los datos disponibles de esa franja y día.
 
 ## Formato de datos por estación
 
