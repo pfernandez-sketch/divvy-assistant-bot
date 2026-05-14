@@ -958,6 +958,9 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         if msg.get("content"):
             st.markdown(msg["content"])
+        if msg.get("code"):
+            with st.expander("🔍 Ver código generado", expanded=False):
+                st.code(msg["code"], language="python")
 
 if user_input := st.chat_input("¿Dónde dejo las bicis? ¿Qué estación necesita reposición?"):
     st.session_state.messages.append({"role": "user", "content": user_input})
