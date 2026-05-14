@@ -370,8 +370,7 @@ Filtra **siempre** por franja horaria Y mes actual para contexto estacional rele
 | Columna | Descripción |
 |---|---|
 | `fecha` | Fecha (date) |
-| `dia_de_la_semana` | Día de la semana |
-| `franja_horaria` | Madrugada/Mañana/Tarde/Noche |
+| `dia_de_la_semana` | Día de la semana en **español** (Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo) || `franja_horaria` | Madrugada/Mañana/Tarde/Noche |
 | `estacion` | Nombre de la estación |
 | `de_salidas` | Bicis que salieron |
 | `de_llegadas` | Bicis que llegaron |
@@ -488,24 +487,24 @@ Coordenadas de referencia de Chicago:
 ## Regla 5: Histórico con contexto estacional
 
 ```python
+# SIN mes especifico (pregunta general):
 hist = df_historico[
     (df_historico['estacion'].str.lower().str.contains('michigan')) &
     (df_historico['franja_horaria'] == '{current_slot}') &
-    (df_historico['fecha'].astype(str).str[5:7].astype(int) == {current_month})
+    (df_historico['dia_de_la_semana'] == 'Martes')
 ]
-# Si menos de 5 registros, ampliar a meses adyacentes
-if len(hist) < 5:
-    meses = [{current_month}, max(1, {current_month}-1), min(12, {current_month}+1)]
-    hist = df_historico[
-        (df_historico['estacion'].str.lower().str.contains('michigan')) &
-        (df_historico['franja_horaria'] == '{current_slot}') &
-        (df_historico['fecha'].astype(str).str[5:7].astype(int).isin(meses))
-    ]
+
+# CON mes especifico (solo si el usuario lo menciona):
+hist = df_historico[
+    (df_historico['estacion'].str.lower().str.contains('michigan')) &
+    (df_historico['franja_horaria'] == '{current_slot}') &
+    (df_historico['dia_de_la_semana'] == 'Martes') &
+    (df_historico['fecha'].astype(str).str[5:7].astype(int) == 12)
+]
 balance_promedio = hist['balance_neto'].mean()
 salidas_promedio = hist['de_salidas'].mean()
 ```
 - **NUNCA** uses `== 'nombre'` para buscar estaciones en df_historico, usa `.str.lower().str.contains('nombre')`
-- **NUNCA** uses días en español en df_historico — están en inglés: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 - Si la pregunta NO menciona un mes concreto, NO filtres por mes en df_historico. 
 - Solo filtra por mes cuando el usuario lo especifique explícitamente.
 
@@ -589,7 +588,7 @@ resultado = plan
 - Usa comillas simples en strings dentro del código
 - Verifica `if not df.empty` antes de `.iloc[0]`
 - No uses `import`
-
+- Filtra df_historico por mes SOLO si el usuario menciona un mes explícitamente. Si no menciona mes, usa todos los datos disponibles de esa franja y día.
 ## Formato de datos por estación
 
 - `[Nombre] — [X] docks libres de [Y] (ocupación: [Z]%) — a [D] metros`
@@ -615,7 +614,6 @@ resultado = plan
 - **NUNCA** uses np.sqrt, haversine o Pitágoras para distancias entre estaciones
 - **NUNCA** multipliques occupancy_pct por 100
 - **NUNCA** uses `== 'nombre'` para buscar estaciones en df_historico, usa `.str.lower().str.contains('nombre')`
-- **NUNCA** uses días en español en df_historico — están en inglés: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 
 ## Umbrales
 
