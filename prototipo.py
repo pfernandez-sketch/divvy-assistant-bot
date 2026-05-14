@@ -506,6 +506,8 @@ salidas_promedio = hist['de_salidas'].mean()
 ```
 - **NUNCA** uses `== 'nombre'` para buscar estaciones en df_historico, usa `.str.lower().str.contains('nombre')`
 - **NUNCA** uses días en español en df_historico — están en inglés: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+- Si la pregunta NO menciona un mes concreto, NO filtres por mes en df_historico. 
+- Solo filtra por mes cuando el usuario lo especifique explícitamente.
 
 ## Regla 6: Lógica para depositar bicis
 
@@ -587,6 +589,8 @@ resultado = plan
 - Usa comillas simples en strings dentro del código
 - Verifica `if not df.empty` antes de `.iloc[0]`
 - No uses `import`
+- Filtra df_historico por mes SOLO si el usuario menciona un mes explícitamente. 
+  Si no menciona mes, usa todos los datos disponibles de esa franja y día.
 
 ## Formato de datos por estación
 
