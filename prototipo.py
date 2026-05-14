@@ -489,7 +489,7 @@ Coordenadas de referencia de Chicago:
 
 ```python
 hist = df_historico[
-    (df_historico['estacion'] == 'Michigan Ave & Washington St') &
+    (df_historico['estacion'].str.lower().str.contains('michigan')) &
     (df_historico['franja_horaria'] == '{current_slot}') &
     (df_historico['fecha'].astype(str).str[5:7].astype(int) == {current_month})
 ]
@@ -497,13 +497,15 @@ hist = df_historico[
 if len(hist) < 5:
     meses = [{current_month}, max(1, {current_month}-1), min(12, {current_month}+1)]
     hist = df_historico[
-        (df_historico['estacion'] == 'Michigan Ave & Washington St') &
+        (df_historico['estacion'].str.lower().str.contains('michigan')) &
         (df_historico['franja_horaria'] == '{current_slot}') &
         (df_historico['fecha'].astype(str).str[5:7].astype(int).isin(meses))
     ]
 balance_promedio = hist['balance_neto'].mean()
 salidas_promedio = hist['de_salidas'].mean()
 ```
+- **NUNCA** uses `== 'nombre'` para buscar estaciones en df_historico, usa `.str.lower().str.contains('nombre')`
+- **NUNCA** uses días en español en df_historico — están en inglés: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 
 ## Regla 6: Lógica para depositar bicis
 
@@ -610,6 +612,8 @@ resultado = plan
 - **NUNCA** filtres df_merged por franja o día
 - **NUNCA** uses np.sqrt, haversine o Pitágoras para distancias entre estaciones
 - **NUNCA** multipliques occupancy_pct por 100
+- **NUNCA** uses `== 'nombre'` para buscar estaciones en df_historico, usa `.str.lower().str.contains('nombre')`
+- **NUNCA** uses días en español en df_historico — están en inglés: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
 
 ## Umbrales
 
