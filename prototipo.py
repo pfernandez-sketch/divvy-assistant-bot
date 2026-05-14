@@ -682,7 +682,11 @@ def load_data():
         "variabilidad_balance": "variabilidad_balance_neto",
         "evento_soldier_field": "evento"
     })
-
+    dias_en = {
+    'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles',
+    'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
+    }
+    df_historico['dia_de_la_semana'] = df_historico['dia_de_la_semana'].map(dias_en).fillna(df_historico['dia_de_la_semana'])
     df_clima   = pd.DataFrame()
     df_eventos = pd.DataFrame()
 
